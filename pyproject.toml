@@ -1,0 +1,180 @@
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers", 
+    "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml",
+    "--cov-fail-under=80"
+]
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "security: marks tests as security tests", 
+    "performance: marks tests as performance tests",
+    "unit: marks tests as unit tests"
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning"
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/conftest.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod"
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["src", "kali_agents"]
+known_third_party = ["fastmcp", "langchain", "langgraph", "ollama"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "fastmcp.*",
+    "langchain.*", 
+    "langgraph.*",
+    "ollama.*",
+    "pytest.*"
+]
+ignore_missing_imports = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs"]
+skips = ["B101", "B601"]  # assert_used, shell_injection (we need these for Kali tools)
+
+[tool.bandit.assert_used]
+skips = ["**/test_*.py", "**/tests/*.py"]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kali-agents-mcp"
+version = "0.1.0"
+description = "Intelligent orchestration system for Kali Linux cybersecurity tools using MCP and LangGraph"
+readme = "README.md"
+license = {text = "GPL-3.0"}
+authors = [
+    {name = "Huleinpylo", email = "simon.g.terrien@gmail.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: POSIX :: Linux", 
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: System :: Systems Administration"
+]
+keywords = ["cybersecurity", "kali-linux", "automation", "ai", "penetration-testing"]
+requires-python = ">=3.9"
+dependencies = [
+    "fastmcp>=2.8.0",
+    "langchain>=0.1.12",
+    "langchain-community>=0.0.27", 
+    "langgraph>=0.0.42",
+    "langchain-ollama>=0.0.2",
+    "pydantic>=2.6.3",
+    "python-dotenv>=1.0.1",
+    "loguru>=0.7.2",
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+    "httpx>=0.25.0",
+    "asyncio-mqtt>=0.13.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0", 
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "bandit>=1.7.5"
+]
+security = [
+    "bandit>=1.7.5",
+    "safety>=2.3.0",
+    "semgrep>=1.45.0"
+]
+docs = [
+    "sphinx>=6.0.0",
+    "sphinx-rtd-theme>=1.2.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/Huleinpylo/kali-agents-mcp"
+Repository = "https://github.com/Huleinpylo/kali-agents-mcp.git"
+Issues = "https://github.com/Huleinpylo/kali-agents-mcp/issues"
+Documentation = "https://github.com/Huleinpylo/kali-agents-mcp/docs"
+
+[project.scripts]
+kali-agents = "src.cli.main:app"
