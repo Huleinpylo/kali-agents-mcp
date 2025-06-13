@@ -1,0 +1,270 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+        
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install system dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nmap masscan gobuster
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov pytest-asyncio pytest-mock
+        pip install flake8 black isort mypy
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
+
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Format check with black
+      run: |
+        black --check src/ --diff
+
+    - name: Import sort check with isort
+      run: |
+        isort --check-only src/ --diff
+
+    - name: Type check with mypy
+      run: |
+        mypy src/ --ignore-missing-imports
+
+    - name: Test with pytest
+      run: |
+        pytest tests/ -v --cov=src/ --cov-report=xml --cov-report=html --cov-report=term-missing
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+        path: |
+          htmlcov/
+          coverage.xml
+          pytest.xml
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    services:
+      ollama:
+        image: ollama/ollama:latest
+        ports:
+          - 11434:11434
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nmap masscan gobuster nikto sqlmap
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio docker
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Wait for Ollama to be ready
+      run: |
+        timeout 300 bash -c 'until curl -f http://localhost:11434/api/version; do sleep 5; done'
+
+    - name: Setup Ollama model
+      run: |
+        curl -X POST http://localhost:11434/api/pull -d '{"name": "llama3.2:1b"}'
+
+    - name: Run integration tests
+      run: |
+        pytest tests/integration/ -v --tb=short
+      env:
+        OLLAMA_HOST: localhost:11434
+        TEST_ENVIRONMENT: ci
+
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: |
+          integration-test-results.xml
+
+  security-test:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-security
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run security tests
+      run: |
+        pytest tests/security/ -v --tb=short
+
+    - name: Upload security test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-test-results
+        path: |
+          security-test-results.xml
+
+  performance-test:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-benchmark memory-profiler
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run performance tests
+      run: |
+        pytest tests/performance/ -v --benchmark-only --benchmark-json=benchmark.json
+
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-results
+        path: |
+          benchmark.json
+
+  docs-test:
+    name: Documentation Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install sphinx sphinx-rtd-theme docutils
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Test documentation build
+      run: |
+        # Test that documentation can be built
+        sphinx-build -b html docs/ docs/_build/html -W
+
+    - name: Test docstring coverage
+      run: |
+        pip install docstring-coverage
+        docstring-coverage src/ --fail-under=80
+
+    - name: Test README
+      run: |
+        python -m docutils.parsers.rst README.md /dev/null
+
+  compatibility-test:
+    name: Compatibility Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        kali-version: ['kali-rolling', 'kali-last-snapshot']
+    
+    container:
+      image: kalilinux/${{ matrix.kali-version }}
+    
+    steps:
+    - name: Update and install system packages
+      run: |
+        apt-get update
+        apt-get install -y python3 python3-pip git nmap masscan gobuster nikto sqlmap
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run compatibility tests
+      run: |
+        pytest tests/compatibility/ -v
