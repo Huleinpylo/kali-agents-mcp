@@ -59,7 +59,7 @@ jobs:
         fi
 
     - name: Upload Security Reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-reports
@@ -78,7 +78,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Dependency Review
-      uses: actions/dependency-review-action@v3
+      uses: actions/dependency-review-action@v4
       with:
         fail-on-severity: high
 
@@ -159,7 +159,7 @@ jobs:
         pip-licenses --fail-on="Apache Software License;MIT License;BSD License" --allow-only="GNU General Public License v3;GNU General Public License v3 or later;GPL-3.0;GPL-3.0-or-later" || true
 
     - name: Upload License Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: license-report
         path: licenses.json
