@@ -30,5 +30,5 @@ memory-profiler
 docker
 kubernetes
 # Additional Libraries
-
+pip-licenses
 rich>=13.9.4
