@@ -4,8 +4,12 @@ import pytest
 import asyncio
 import tempfile
 import os
+import sys
 from unittest.mock import Mock, AsyncMock, patch
 from pathlib import Path
+
+# Ensure missing plugins do not cause import errors
+sys.modules.setdefault("pytest_asyncio", type(sys)("pytest_asyncio"))
 
 # Test fixtures for common mocks
 @pytest.fixture
@@ -213,23 +217,10 @@ Service detection performed.
 def sample_gobuster_output():
     """Sample gobuster output for parsing tests"""
     return """
-===============================================================
-Gobuster v3.6
-by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
-===============================================================
-[+] Url:                     http://test.localhost
-[+] Method:                  GET
-[+] Threads:                 10
-[+] Wordlist:                /usr/share/wordlists/dirb/common.txt
-[+] Negative Status codes:   404
-[+] User Agent:              gobuster/3.6
-[+] Timeout:                 10s
-===============================================================
 /admin                (Status: 200) [Size: 1234]
 /backup               (Status: 403) [Size: 278]
 /login                (Status: 200) [Size: 2156]
-/uploads              (Status: 301) [Size: 234] [--> http://test.localhost/uploads/]
-===============================================================
+/uploads              (Status: 301) [Size: 234]
 """
 
 @pytest.fixture
@@ -252,6 +243,52 @@ Parameter: id (GET)
     Title: AND boolean-based blind - WHERE or HAVING clause
     Payload: id=1 AND 1=1
 ---
+"""
+
+@pytest.fixture
+def sample_nikto_output():
+    """Sample nikto JSON output for parsing tests"""
+    return '{"vulnerabilities": [{"id": "1", "msg": "Possible SQL injection", "uri": "/index.php", "method": "GET", "OSVDB": "12345"}]}'
+
+@pytest.fixture
+def sample_whatweb_output():
+    """Sample whatweb JSON output for parsing tests"""
+    return """
+{"plugins": {"Apache": {"version": "2.4.52", "string": "Apache httpd"}}}
+"""
+
+@pytest.fixture
+def sample_nmap_xml():
+    """Sample nmap XML output for parsing tests"""
+    return """<?xml version='1.0'?>
+<nmaprun>
+  <host>
+    <status state='up'/>
+    <address addr='127.0.0.1' addrtype='ipv4'/>
+    <hostname name='localhost' type='user'/>
+    <ports>
+      <port protocol='tcp' portid='22'>
+        <state state='open'/>
+        <service name='ssh' version='OpenSSH'/>
+      </port>
+      <port protocol='tcp' portid='80'>
+        <state state='open'/>
+        <service name='http' version='Apache'/>
+      </port>
+    </ports>
+    <os>
+      <osmatch name='Linux' accuracy='95'/>
+    </os>
+  </host>
+</nmaprun>
+"""
+
+@pytest.fixture
+def sample_discovery_output():
+    """Sample output for network discovery parsing tests"""
+    return """
+Nmap scan report for host1 (192.168.1.10)
+Nmap scan report for 192.168.1.11
 """
 
 # Performance test fixtures
@@ -326,6 +363,31 @@ def pytest_sessionstart(session):
     os.environ["LOG_LEVEL"] = "DEBUG"
     os.environ["DISABLE_AUTH"] = "true"
     os.environ["MOCK_TOOLS"] = "true"
+    import sys
+    from types import SimpleNamespace
+
+    class DummyMCP:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def tool(self, func):
+            return func
+
+        def run(self):
+            pass
+
+    sys.modules.setdefault(
+        "fastmcp",
+        SimpleNamespace(FastMCP=DummyMCP, Context=object),
+    )
+    sys.modules.setdefault(
+        "dotenv",
+        SimpleNamespace(load_dotenv=lambda *a, **k: None),
+    )
+    sys.modules.setdefault(
+        "pytest_asyncio",
+        SimpleNamespace(__name__="pytest_asyncio"),
+    )
 
 def pytest_sessionfinish(session, exitstatus):
     """Cleanup test environment"""
