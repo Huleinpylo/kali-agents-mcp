@@ -1,49 +1,49 @@
 # Core dependencies for Kali Agents - Updated with FastMCP 2.8.0
-fastmcp==2.8.0
-langchain==0.3.0
-langchain-community==0.3.0
-langgraph==0.0.42
+fastmcp
+langchain
+langchain-community
+langgraph
 langchain-ollama
 
 # Web framework
-fastapi==0.110.1
-uvicorn==0.29.0
+fastapi
+uvicorn
 
 # Data validation and serialization
-pydantic==2.6.3
+pydantic
 
 # Configuration management
-python-dotenv==1.0.1
+python-dotenv
 
 # Logging
-loguru==0.7.2
+loguru
 
 # CLI interface
-click==8.1.7
-rich==13.7.1
+click
+rich
 
 # Report generation
-reportlab==4.1.0
-jinja2==3.1.6
+reportlab
+jinja2
 
 # Network and security tools integration
-python-nmap==0.7.1
-requests==2.32.4
-beautifulsoup4==4.12.3
+python-nmap
+requests
+beautifulsoup4
 
 # Data processing
-pandas==2.2.1
-numpy==1.26.4
+pandas
+numpy
 
 # Async support
-aiohttp==3.10.11
-asyncio-mqtt==0.16.1
+aiohttp
+asyncio-mqtt
 
 # Testing
-pytest==8.1.1
-pytest-asyncio==0.23.6
+pytest
+pytest-asyncio
 
 # Development tools
-black==24.3.0
-flake8==7.0.0
-mypy==1.9.0
+black
+flake8
+mypy

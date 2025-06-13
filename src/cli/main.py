@@ -169,6 +169,9 @@ class KaliAgentsCLI:
             progress_task = progress.add_task("? Supervisor analyzing request...", total=None)
             
             try:
+                # Ensure supervisor is initialized
+                if not self.supervisor:
+                    raise RuntimeError("Supervisor agent is not initialized.")
                 # Execute the task
                 result = await self.supervisor.process_user_request(
                     request, 
