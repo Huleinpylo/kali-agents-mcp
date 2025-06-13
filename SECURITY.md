@@ -9,13 +9,11 @@ We take the security of Kali Agents MCP seriously. If you discover a security vu
 **Please DO NOT report security vulnerabilities through public GitHub issues.**
 
 Instead, please report them to:
-- **Email**: security@kali-agents.dev (if available)
 - **GitHub Private Security Advisory**: Use the "Security" tab in this repository
-- **Encrypted Communication**: PGP key available on request
 
 ### ? Response Timeline
 
-We will acknowledge receipt of your vulnerability report within **48 hours** and provide a detailed response within **7 days** indicating the next steps in handling your submission.
+We will acknowledge receipt of your vulnerability report within **72 hours** and provide a detailed response within **7 days** indicating the next steps in handling your submission.
 
 ## ? Scope
 
