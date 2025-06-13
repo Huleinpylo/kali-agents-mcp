@@ -27,7 +27,7 @@ async def gobuster_directory(
     wordlist: str = "common",
     extensions: str = "php,html,txt,js,css",
     threads: int = 10,
-    ctx: Context = None
+    ctx: Optional[Context] = None
 ) -> Dict[str, Any]:
     """
     Perform directory and file enumeration using gobuster.
@@ -124,7 +124,7 @@ async def gobuster_directory(
 async def nikto_scan(
     url: str,
     options: str = "-C all",
-    ctx: Context = None
+    ctx: Optional[Context] = None
 ) -> Dict[str, Any]:
     """
     Perform web vulnerability scanning using nikto.
@@ -203,7 +203,7 @@ async def sqlmap_test(
     technique: str = "BEUSTQ",
     level: int = 1,
     risk: int = 1,
-    ctx: Context = None
+    ctx: Optional[Context] = None
 ) -> Dict[str, Any]:
     """
     Test for SQL injection vulnerabilities using sqlmap.
@@ -288,7 +288,7 @@ async def sqlmap_test(
 @mcp.tool
 async def web_technology_detection(
     url: str,
-    ctx: Context = None
+    ctx: Optional[Context] = None
 ) -> Dict[str, Any]:
     """
     Detect web technologies used by a website using whatweb.
@@ -358,7 +358,7 @@ async def web_technology_detection(
         }
 
 
-async def _manual_tech_detection(url: str, ctx: Context = None) -> Dict[str, Any]:
+async def _manual_tech_detection(url: str, ctx: Optional[Context] = None) -> Dict[str, Any]:
     """Fallback manual technology detection using curl."""
     import aiohttp
     

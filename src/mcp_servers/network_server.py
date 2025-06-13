@@ -25,7 +25,7 @@ async def nmap_scan(
     target: str,
     scan_type: str = "stealth",
     ports: str = "top-1000",
-    ctx: Context = None
+    ctx: Optional[Context] = None
 ) -> Dict[str, Any]:
     """
     Perform network reconnaissance using nmap.
@@ -124,7 +124,7 @@ async def masscan_ports(
     target: str,
     ports: str = "1-1000",
     rate: int = 1000,
-    ctx: Context = None
+    ctx: Optional[Context] = None
 ) -> Dict[str, Any]:
     """
     Perform high-speed port scanning using masscan.
@@ -216,7 +216,7 @@ async def masscan_ports(
 async def network_discovery(
     network: str,
     method: str = "ping",
-    ctx: Context = None
+    ctx: Optional[Context] = None
 ) -> Dict[str, Any]:
     """
     Discover live hosts on a network.
@@ -334,7 +334,7 @@ def _parse_nmap_xml(xml_output: str) -> Dict[str, Any]:
                 state_elem = port.find("state")
                 if state_elem is not None and state_elem.get("state") == "open":
                     port_info = {
-                        "port": int(port.get("portid")),
+                        "port": int(port.get("portid") or 0),
                         "protocol": port.get("protocol"),
                         "state": state_elem.get("state"),
                         "service": None,

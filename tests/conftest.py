@@ -5,6 +5,7 @@ import asyncio
 import tempfile
 import os
 import sys
+import types
 from unittest.mock import Mock, AsyncMock, patch
 from pathlib import Path
 
@@ -375,19 +376,22 @@ def pytest_sessionstart(session):
 
         def run(self):
             pass
+    @pytest.fixture(autouse=True)
+    def mock_fastmcp(monkeypatch):
+        mod = types.ModuleType("fastmcp")
+        mod.FastMCP = DummyMCP # type: ignore
+        mod.Context = object # type: ignore
+        monkeypatch.setitem(sys.modules, "fastmcp", mod)
 
-    sys.modules.setdefault(
-        "fastmcp",
-        SimpleNamespace(FastMCP=DummyMCP, Context=object),
-    )
-    sys.modules.setdefault(
-        "dotenv",
-        SimpleNamespace(load_dotenv=lambda *a, **k: None),
-    )
-    sys.modules.setdefault(
-        "pytest_asyncio",
-        SimpleNamespace(__name__="pytest_asyncio"),
-    )
+    @pytest.fixture(autouse=True)
+    def mock_dotenv(monkeypatch):
+        mod = types.ModuleType("dotenv")
+        mod.load_dotenv = lambda: None # type: ignore
+        monkeypatch.setitem(sys.modules, "dotenv", mod)
+
+    mock_pytest_asyncio = types.ModuleType("pytest_asyncio")
+    mock_pytest_asyncio.__name__ = "pytest_asyncio"
+    sys.modules.setdefault("pytest_asyncio", mock_pytest_asyncio)
 
 def pytest_sessionfinish(session, exitstatus):
     """Cleanup test environment"""

@@ -156,9 +156,11 @@ Let's see the intelligent orchestration in action! ?
         
         # Execute actual task
         try:
+            if not self.supervisor:
+                self.supervisor = create_supervisor_agent()
             result = await self.supervisor.process_user_request(
-                "Perform a comprehensive penetration test on demo.testfire.net",
-                {"target": "demo.testfire.net", "demo_mode": True}
+            "Perform a comprehensive penetration test on demo.testfire.net",
+            {"target": "demo.testfire.net", "demo_mode": True}
             )
             
             await self.display_execution_results(result)

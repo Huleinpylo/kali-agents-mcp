@@ -7,7 +7,7 @@ for optimal task assignment and adaptive learning.
 
 import asyncio
 import uuid
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
 from fastmcp import Client
 
@@ -21,7 +21,7 @@ from src.models import (
 class SupervisorAgent:
     """Intelligent Supervisor Agent with ML-based decision making."""
     
-    def __init__(self, agent_id: str = None):
+    def __init__(self, agent_id: Optional[str] = None):
         self.agent_id = agent_id or f"supervisor_{uuid.uuid4().hex[:8]}"
         self.system_state = SystemState()
         self.mcp_clients: Dict[str, Client] = {}
@@ -58,7 +58,7 @@ class SupervisorAgent:
             
             self.system_state.agents[agent_id] = agent_state
     
-    async def process_user_request(self, request: str, parameters: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def process_user_request(self, request: str, parameters: Union[Dict[str, Any], None] = None) -> Dict[str, Any]:
         """Process a high-level user request and orchestrate execution."""
         print(f"? Supervisor processing request: {request}")
         
@@ -369,6 +369,6 @@ class SupervisorAgent:
         }
 
 
-def create_supervisor_agent(agent_id: str = None) -> SupervisorAgent:
+def create_supervisor_agent(agent_id: Optional[str] = None) -> SupervisorAgent:
     """Create and initialize a supervisor agent."""
     return SupervisorAgent(agent_id)

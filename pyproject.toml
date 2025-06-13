@@ -170,11 +170,6 @@ docs = [
     "sphinx-rtd-theme>=1.2.0"
 ]
 
-[project.urls]
-Homepage = "https://github.com/Huleinpylo/kali-agents-mcp"
-Repository = "https://github.com/Huleinpylo/kali-agents-mcp.git"
-Issues = "https://github.com/Huleinpylo/kali-agents-mcp/issues"
-Documentation = "https://github.com/Huleinpylo/kali-agents-mcp/docs"
 
 [project.scripts]
 kali-agents = "src.cli.main:app"
@@ -189,18 +184,4 @@ Issues = "https://github.com/Huleinpylo/kali-agents-mcp/issues"
 Changelog = "https://github.com/Huleinpylo/kali-agents-mcp/blob/main/CHANGELOG.md"
 Security = "https://github.com/Huleinpylo/kali-agents-mcp/security/policy"
 
-[tool.coverage.run]
-omit = [
-    "tests/*",
-    "docs/*",
-    "examples/*"
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError"
-]
 fail_under = 90

@@ -1,0 +1,7 @@
+# tests/conftest.pyi
+class fastmcp(types.ModuleType):
+    FastMCP: type
+    Context: type
+
+class dotenv(types.ModuleType):
+    load_dotenv: callable
