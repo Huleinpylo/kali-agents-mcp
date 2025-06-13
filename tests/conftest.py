@@ -296,7 +296,12 @@ def mock_tool_failure():
     return mock_run
 
 # Test markers for categorization
-pytest_plugins = ['pytest_asyncio']
+try:
+    import pytest_asyncio  # type: ignore
+except Exception:  # pragma: no cover - fallback if plugin unavailable
+    pytest_plugins = []
+else:
+    pytest_plugins = ['pytest_asyncio']
 
 def pytest_configure(config):
     """Configure custom pytest markers"""
