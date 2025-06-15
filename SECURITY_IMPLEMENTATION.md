@@ -15,6 +15,8 @@ Ce document d?taille toutes les protections de s?curit? mises en place pour le r
 - ? Templates d'issues et PR avec focus s?curit?
 
 #### ? **Automatisation de S?curit?**
+Ces contr?les sont regroup?s dans le workflow GitHub Actions
+`security.yml` :
 - ? **CodeQL Analysis** - Analyse statique automatis?e
 - ? **Dependency Review** - V?rification des d?pendances
 - ? **Secret Scanning** - D?tection de secrets avec TruffleHog
@@ -232,10 +234,10 @@ Ces protections assurent que cet outil r?volutionnaire d'orchestration de cybers
 
 ## ? ?tat Actuel du Repository
 
-### ?? **Infrastructure de S?curit? Compl?te**
-- **22 fichiers de protection** ajout?s
-- **5 workflows GitHub Actions** configur?s
-- **Automatisation compl?te** des contr?les
+### ?? **Infrastructure de S?curit? Actuelle**
+- **Plusieurs fichiers de protection** (SECURITY.md, SECURITY_ANALYSIS.md, ...)
+- **2 workflows GitHub Actions** configur?s (`tests.yml` et `security.yml`)
+- **Automatisation des contr?les** via le workflow `security.yml`
 - **Documentation exhaustive** de s?curit?
 
 ### ?? **Niveau de S?curit? : ENTERPRISE-GRADE**
