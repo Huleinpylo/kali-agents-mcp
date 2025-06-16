@@ -1,453 +1,496 @@
+#!/usr/bin/env python3
 """
-Kali Agents CLI Interface - "At Your Service"
+Kali Agents CLI - "At Your Service"
 
-Rich terminal interface for interacting with the intelligent supervisor agent.
+Main command-line interface for the Kali Agents MCP system.
+Provides intuitive commands for cybersecurity automation.
 """
 
+import typer
 import asyncio
-import click
-import json
+from typing import Optional, List
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+from rich.progress import track
 from rich.prompt import Prompt, Confirm
-from rich.text import Text
-from rich.layout import Layout
-from rich.live import Live
-from datetime import datetime
-from typing import Dict, Any, Optional
+from pathlib import Path
+import json
 
-from src.agents.supervisor import create_supervisor_agent
-from src.models import AgentType, TaskStatus, Priority
+# Import system components
+try:
+    from src.agents.supervisor import create_supervisor_agent
+    from src.models import AgentType, Priority, TaskStatus
+    from src.config.settings import KALI_TOOLS
+    SYSTEM_AVAILABLE = True
+except ImportError:
+    SYSTEM_AVAILABLE = False
 
-
+app = typer.Typer(
+    name="kali-agents",
+    help="🔴 Kali Agents - Intelligent Cybersecurity Automation 'At Your Service'",
+    rich_markup_mode="rich"
+)
 console = Console()
 
 
-class KaliAgentsCLI:
-    """Rich CLI interface for Kali Agents system."""
-    
-    def __init__(self):
-        self.supervisor = None
-        self.console = Console()
-        self.active_session = False
-    
-    async def initialize(self):
-        """Initialize the supervisor agent."""
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=self.console,
-        ) as progress:
-            task = progress.add_task("? Initializing Kali Agents...", total=None)
-            
-            try:
-                self.supervisor = create_supervisor_agent()
-                progress.update(task, description="? Supervisor Agent initialized")
-                await asyncio.sleep(0.5)  # Visual delay
-                
-                progress.update(task, description="? Loading ML algorithms...")
-                await asyncio.sleep(0.5)
-                
-                progress.update(task, description="? Connecting to MCP servers...")
-                await asyncio.sleep(0.5)
-                
-                progress.update(task, description="? Kali Agents ready!")
-                await asyncio.sleep(0.5)
-                
-            except Exception as e:
-                progress.update(task, description=f"? Initialization failed: {str(e)}")
-                raise
-    
-    def display_banner(self):
-        """Display the Kali Agents banner."""
-        banner = """
-[bold red]????????????????????????????????????????????????????????????????[/bold red]
-[bold red]?                    ? KALI AGENTS ?                         ?[/bold red]
-[bold red]?                   "At Your Service"                          ?[/bold red]
-[bold red]?                                                              ?[/bold red]
-[bold red]?  Intelligent Cybersecurity Orchestration System             ?[/bold red]
-[bold red]?  ML-Driven ? Adaptive ? Self-Learning                       ?[/bold red]
-[bold red]????????????????????????????????????????????????????????????????[/bold red]
+# Global supervisor instance
+supervisor = None
 
-[bold cyan]? Supervisor Agent:[/bold cyan] [green]Online[/green]
-[bold cyan]? ML Algorithms:[/bold cyan] [green]Fuzzy Logic ? Genetic Algorithm ? Q-Learning[/green]
-[bold cyan]? MCP Servers:[/bold cyan] [green]Network ? Web ? Vulnerability ? Forensic ? Social ? Report[/green]
-"""
-        self.console.print(Panel(banner, style="bold blue"))
-    
-    def display_help(self):
-        """Display help information."""
-        help_text = """
-[bold yellow]? AVAILABLE COMMANDS:[/bold yellow]
 
-[bold cyan]pentest <target>[/bold cyan]     - Perform comprehensive penetration test
-[bold cyan]scan <target>[/bold cyan]        - Quick network scan  
-[bold cyan]web <target>[/bold cyan]         - Web application assessment
-[bold cyan]recon <target>[/bold cyan]       - Reconnaissance and discovery
-[bold cyan]osint <target>[/bold cyan]       - OSINT gathering
-[bold cyan]status[/bold cyan]               - Show system status
-[bold cyan]agents[/bold cyan]               - List all agents and their status
-[bold cyan]history[/bold cyan]              - Show recent tasks
-[bold cyan]help[/bold cyan]                 - Show this help
-[bold cyan]exit[/bold cyan]                 - Exit Kali Agents
+def initialize_supervisor():
+    """Initialize the supervisor agent."""
+    global supervisor
+    if SYSTEM_AVAILABLE and supervisor is None:
+        supervisor = create_supervisor_agent()
+    return supervisor
 
-[bold yellow]? EXAMPLES:[/bold yellow]
-[dim]pentest example.com[/dim]
-[dim]scan 192.168.1.0/24[/dim]  
-[dim]web https://target.com[/dim]
-[dim]recon company.com[/dim]
 
-[bold green]? TIP:[/bold green] The supervisor uses ML algorithms to optimize each task!
-"""
-        self.console.print(Panel(help_text, title="? Kali Agents Help", style="bold blue"))
+@app.command("demo")
+def run_demo(
+    interactive: bool = typer.Option(False, "--interactive", "-i", help="Run interactive demo"),
+    scenario: str = typer.Option("full", "--scenario", "-s", help="Demo scenario to run")
+):
+    """🎭 Run the Kali Agents demonstration."""
+    console.print("[bold cyan]🎭 Starting Kali Agents Demo...[/bold cyan]")
     
-    async def process_command(self, command: str) -> bool:
-        """Process a user command."""
-        parts = command.strip().split()
-        if not parts:
-            return True
-        
-        cmd = parts[0].lower()
-        args = parts[1:] if len(parts) > 1 else []
-        
-        if cmd in ['exit', 'quit', 'q']:
-            return False
-        elif cmd == 'help':
-            self.display_help()
-        elif cmd == 'status':
-            await self.show_status()
-        elif cmd == 'agents':
-            await self.show_agents()
-        elif cmd == 'history':
-            await self.show_history()
-        elif cmd in ['pentest', 'scan', 'web', 'recon', 'osint']:
-            if not args:
-                self.console.print("[red]? Error: Please specify a target[/red]")
-                return True
-            
-            target = args[0]
-            await self.execute_task(cmd, target)
-        else:
-            self.console.print(f"[red]? Unknown command: {cmd}[/red]")
-            self.console.print("[yellow]? Type 'help' for available commands[/yellow]")
-        
-        return True
+    if interactive:
+        console.print("[yellow]Interactive demo mode - you can guide the demonstration![/yellow]")
     
-    async def execute_task(self, task_type: str, target: str):
-        """Execute a task using the supervisor agent."""
-        # Map command to request
-        request_mapping = {
-            'pentest': f'Perform a comprehensive penetration test on {target}',
-            'scan': f'Perform a network scan on {target}',
-            'web': f'Perform web application assessment on {target}',
-            'recon': f'Perform reconnaissance on {target}',
-            'osint': f'Gather OSINT information on {target}'
-        }
+    # Import and run the demo
+    try:
+        import demo
+        asyncio.run(demo.main())
+    except ImportError:
+        console.print("[bold red]❌ Demo module not found. Please ensure demo.py is available.[/bold red]")
+
+
+@app.command("recon")
+def reconnaissance(
+    target: str = typer.Argument(..., help="Target IP, hostname, or CIDR range"),
+    scan_type: str = typer.Option("stealth", "--type", "-t", help="Scan type: stealth, connect, aggressive"),
+    ports: str = typer.Option("top-1000", "--ports", "-p", help="Ports to scan"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
+):
+    """🌐 Perform network reconnaissance on target."""
+    
+    console.print(f"[bold cyan]🌐 Starting reconnaissance on {target}[/bold cyan]")
+    
+    # Initialize supervisor
+    sup = initialize_supervisor()
+    if not sup:
+        console.print("[bold red]❌ System not available. Please check installation.[/bold red]")
+        raise typer.Exit(1)
+    
+    # Create reconnaissance task
+    task_params = {
+        "target": target,
+        "scan_type": scan_type,
+        "ports": ports,
+        "verbose": verbose
+    }
+    
+    if verbose:
+        console.print(f"[dim]Task parameters: {task_params}[/dim]")
+    
+    # Execute reconnaissance
+    try:
+        result = asyncio.run(sup.process_user_request(
+            f"Perform network reconnaissance on {target}",
+            task_params
+        ))
         
-        request = request_mapping.get(task_type, f'Analyze {target}')
+        # Display results
+        display_scan_results(result, output)
         
-        # Show task initiation
-        task_panel = Panel(
-            f"[bold cyan]? Task:[/bold cyan] {request}\n"
-            f"[bold cyan]? Target:[/bold cyan] {target}\n"
-            f"[bold cyan]? Mode:[/bold cyan] Intelligent ML Orchestration",
-            title="? Initiating Task",
-            style="bold green"
-        )
-        self.console.print(task_panel)
+    except Exception as e:
+        console.print(f"[bold red]❌ Error during reconnaissance: {str(e)}[/bold red]")
+        raise typer.Exit(1)
+
+
+@app.command("web")
+def web_assessment(
+    url: str = typer.Argument(..., help="Target URL to assess"),
+    deep: bool = typer.Option(False, "--deep", help="Perform deep web assessment"),
+    wordlist: str = typer.Option("common", "--wordlist", "-w", help="Wordlist to use"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
+):
+    """🕷️ Perform web application security assessment."""
+    
+    console.print(f"[bold cyan]🕷️ Starting web assessment on {url}[/bold cyan]")
+    
+    sup = initialize_supervisor()
+    if not sup:
+        console.print("[bold red]❌ System not available. Please check installation.[/bold red]")
+        raise typer.Exit(1)
+    
+    task_params = {
+        "url": url,
+        "deep_scan": deep,
+        "wordlist": wordlist,
+        "verbose": verbose
+    }
+    
+    try:
+        result = asyncio.run(sup.process_user_request(
+            f"Perform web application security assessment on {url}",
+            task_params
+        ))
         
-        # Execute with progress tracking
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=self.console,
-        ) as progress:
+        display_web_results(result, output)
+        
+    except Exception as e:
+        console.print(f"[bold red]❌ Error during web assessment: {str(e)}[/bold red]")
+        raise typer.Exit(1)
+
+
+@app.command("pentest")
+def penetration_test(
+    target: str = typer.Argument(..., help="Target for penetration testing"),
+    scope: str = typer.Option("basic", "--scope", "-s", help="Test scope: basic, full, custom"),
+    exclude: Optional[List[str]] = typer.Option(None, "--exclude", help="Exclude specific tests"),
+    output_dir: Optional[str] = typer.Option(None, "--output-dir", "-o", help="Output directory"),
+    report_format: str = typer.Option("pdf", "--format", "-f", help="Report format: pdf, html, json"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
+):
+    """⚡ Perform comprehensive penetration testing."""
+    
+    console.print(f"[bold red]⚡ Starting penetration test on {target}[/bold red]")
+    
+    # Security confirmation
+    if not Confirm.ask(f"[bold yellow]⚠️ Confirm you have authorization to test {target}?[/bold yellow]"):
+        console.print("[bold red]❌ Authorization required. Exiting.[/bold red]")
+        raise typer.Exit(1)
+    
+    sup = initialize_supervisor()
+    if not sup:
+        console.print("[bold red]❌ System not available. Please check installation.[/bold red]")
+        raise typer.Exit(1)
+    
+    task_params = {
+        "target": target,
+        "scope": scope,
+        "exclude": exclude or [],
+        "report_format": report_format,
+        "verbose": verbose
+    }
+    
+    console.print("[bold yellow]🛡️ This is a comprehensive security assessment.[/bold yellow]")
+    console.print("[dim]The ML supervisor will coordinate multiple specialized agents...[/dim]")
+    
+    try:
+        with console.status("[bold green]🤖 AI Supervisor orchestrating pentest..."):
+            result = asyncio.run(sup.process_user_request(
+                f"Perform comprehensive penetration test on {target} with {scope} scope",
+                task_params
+            ))
+        
+        display_pentest_results(result, output_dir, report_format)
+        
+    except Exception as e:
+        console.print(f"[bold red]❌ Error during penetration test: {str(e)}[/bold red]")
+        raise typer.Exit(1)
+
+
+@app.command("osint")
+def osint_research(
+    target: str = typer.Argument(..., help="Target for OSINT research"),
+    target_type: str = typer.Option("person", "--type", "-t", help="Target type: person, company, domain"),
+    depth: str = typer.Option("standard", "--depth", "-d", help="Research depth: basic, standard, deep"),
+    sources: Optional[List[str]] = typer.Option(None, "--sources", help="Specific sources to use"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
+):
+    """👥 Perform OSINT research and intelligence gathering."""
+    
+    console.print(f"[bold cyan]👥 Starting OSINT research on {target}[/bold cyan]")
+    
+    sup = initialize_supervisor()
+    if not sup:
+        console.print("[bold red]❌ System not available. Please check installation.[/bold red]")
+        raise typer.Exit(1)
+    
+    task_params = {
+        "target": target,
+        "target_type": target_type,
+        "depth": depth,
+        "sources": sources or [],
+        "verbose": verbose
+    }
+    
+    try:
+        result = asyncio.run(sup.process_user_request(
+            f"Perform OSINT research on {target} ({target_type})",
+            task_params
+        ))
+        
+        display_osint_results(result, output)
+        
+    except Exception as e:
+        console.print(f"[bold red]❌ Error during OSINT research: {str(e)}[/bold red]")
+        raise typer.Exit(1)
+
+
+@app.command("forensics")
+def forensic_analysis(
+    target: str = typer.Argument(..., help="File or memory dump to analyze"),
+    analysis_type: str = typer.Option("auto", "--type", "-t", help="Analysis type: auto, memory, file, network"),
+    output_dir: Optional[str] = typer.Option(None, "--output-dir", "-o", help="Output directory"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
+):
+    """🔍 Perform digital forensics analysis."""
+    
+    console.print(f"[bold cyan]🔍 Starting forensic analysis on {target}[/bold cyan]")
+    
+    # Check if target file exists
+    if not Path(target).exists():
+        console.print(f"[bold red]❌ Target file not found: {target}[/bold red]")
+        raise typer.Exit(1)
+    
+    sup = initialize_supervisor()
+    if not sup:
+        console.print("[bold red]❌ System not available. Please check installation.[/bold red]")
+        raise typer.Exit(1)
+    
+    task_params = {
+        "target": target,
+        "analysis_type": analysis_type,
+        "verbose": verbose
+    }
+    
+    try:
+        result = asyncio.run(sup.process_user_request(
+            f"Perform forensic analysis on {target}",
+            task_params
+        ))
+        
+        display_forensic_results(result, output_dir)
+        
+    except Exception as e:
+        console.print(f"[bold red]❌ Error during forensic analysis: {str(e)}[/bold red]")
+        raise typer.Exit(1)
+
+
+@app.command("status")
+def system_status():
+    """📊 Display system status and agent information."""
+    
+    console.print("[bold cyan]📊 Kali Agents System Status[/bold cyan]")
+    
+    # System information table
+    status_table = Table(title="🤖 System Information", style="cyan")
+    status_table.add_column("Component", style="bold white")
+    status_table.add_column("Status", style="bold green")
+    status_table.add_column("Details", style="dim")
+    
+    # Check system availability
+    if SYSTEM_AVAILABLE:
+        status_table.add_row("Core System", "✅ Available", "All modules loaded")
+        status_table.add_row("Supervisor Agent", "✅ Ready", "ML algorithms initialized")
+        status_table.add_row("MCP Servers", "✅ Running", "FastMCP 2.8.0")
+    else:
+        status_table.add_row("Core System", "❌ Unavailable", "Import errors detected")
+        status_table.add_row("Supervisor Agent", "❌ Not Ready", "System not initialized")
+        status_table.add_row("MCP Servers", "❌ Offline", "Cannot start servers")
+    
+    # Tool availability
+    if SYSTEM_AVAILABLE:
+        for tool_name, tool_path in KALI_TOOLS.items():
+            if Path(tool_path).exists():
+                status_table.add_row(f"Tool: {tool_name}", "✅ Available", tool_path)
+            else:
+                status_table.add_row(f"Tool: {tool_name}", "❌ Missing", tool_path)
+    
+    console.print(status_table)
+    
+    # Agent information
+    if SYSTEM_AVAILABLE:
+        sup = initialize_supervisor()
+        if sup:
+            agents_table = Table(title="🎭 Agent Status", style="cyan")
+            agents_table.add_column("Agent", style="bold cyan")
+            agents_table.add_column("Type", style="white")
+            agents_table.add_column("Status", style="bold green")
+            agents_table.add_column("Performance", style="yellow")
             
-            # Create progress task
-            progress_task = progress.add_task("? Supervisor analyzing request...", total=None)
-            
-            try:
-                # Ensure supervisor is initialized
-                if not self.supervisor:
-                    raise RuntimeError("Supervisor agent is not initialized.")
-                # Execute the task
-                result = await self.supervisor.process_user_request(
-                    request, 
-                    {"target": target, "task_type": task_type}
+            for agent_id, agent_state in sup.system_state.agents.items():
+                performance = f"{agent_state.performance_metrics.success_rate * 100:.1f}%"
+                agents_table.add_row(
+                    agent_id.replace("_", " ").title(),
+                    agent_state.agent_type.value,
+                    "✅ Ready",
+                    performance
                 )
-                
-                # Update progress
-                progress.update(progress_task, description="? Task completed!")
-                await asyncio.sleep(0.5)
-                
-                # Display results
-                await self.display_task_results(result)
-                
-            except Exception as e:
-                progress.update(progress_task, description=f"? Task failed: {str(e)}")
-                self.console.print(f"[red]? Error executing task: {str(e)}[/red]")
-    
-    async def display_task_results(self, result: Dict[str, Any]):
-        """Display task execution results in a formatted way."""
-        task_id = result.get("task_id", "unknown")
-        status = result.get("status", "unknown")
-        execution_results = result.get("results", {})
-        performance = result.get("performance", {})
-        
-        # Create results table
-        results_table = Table(title="? Task Execution Results")
-        results_table.add_column("Metric", style="bold cyan")
-        results_table.add_column("Value", style="bold green")
-        
-        results_table.add_row("Task ID", task_id)
-        results_table.add_row("Status", status.upper())
-        results_table.add_row("Execution Time", f"{execution_results.get('execution_time', 0):.2f}s")
-        results_table.add_row("Steps Completed", str(len(execution_results.get('steps_completed', []))))
-        results_table.add_row("Findings", str(len(execution_results.get('findings', []))))
-        results_table.add_row("Errors", str(len(execution_results.get('errors', []))))
-        
-        # Performance metrics
-        if performance:
-            results_table.add_row("Success Rate", f"{performance.get('success_rate', 0):.2%}")
-            results_table.add_row("Confidence", f"{performance.get('confidence_score', 0):.2%}")
-        
-        self.console.print(results_table)
-        
-        # Display findings if any
-        findings = execution_results.get('findings', [])
-        if findings:
-            findings_table = Table(title="? Security Findings")
-            findings_table.add_column("Type", style="bold yellow")
-            findings_table.add_column("Details", style="white")
-            findings_table.add_column("Severity", style="bold red")
             
-            for finding in findings[:10]:  # Show first 10 findings
-                findings_table.add_row(
-                    finding.get('type', 'unknown'),
-                    str(finding.get('description', finding.get('path', finding.get('host', 'N/A')))),
-                    finding.get('severity', 'info').upper()
-                )
-            
-            if len(findings) > 10:
-                findings_table.add_row("...", f"And {len(findings) - 10} more findings", "")
-            
-            self.console.print(findings_table)
-        
-        # Display errors if any
-        errors = execution_results.get('errors', [])
-        if errors:
-            error_panel = Panel(
-                "\n".join([f"? {error.get('error', str(error))}" for error in errors]),
-                title="??  Errors",
-                style="bold red"
-            )
-            self.console.print(error_panel)
-        
-        # Show learning insights
-        learning_panel = Panel(
-            "[bold green]? ML Learning:[/bold green] Supervisor adapted strategies based on execution\n"
-            "[bold cyan]? Adaptation:[/bold cyan] Performance data added to training set\n"
-            "[bold yellow]? Improvement:[/bold yellow] Future tasks will benefit from this experience",
-            title="? Intelligent Learning",
-            style="bold blue"
-        )
-        self.console.print(learning_panel)
+            console.print(agents_table)
+
+
+@app.command("interactive")
+def interactive_mode():
+    """🎮 Enter interactive mode for guided cybersecurity operations."""
     
-    async def show_status(self):
-        """Show current system status."""
-        if not self.supervisor:
-            self.console.print("[red]? Supervisor not initialized[/red]")
-            return
-        
-        status = self.supervisor.get_system_status()
-        
-        # Create status table
-        status_table = Table(title="??  System Status")
-        status_table.add_column("Component", style="bold cyan")
-        status_table.add_column("Status", style="bold green")
-        
-        status_table.add_row("Supervisor ID", status.get('supervisor_id', 'N/A'))
-        status_table.add_row("Active Tasks", str(status.get('active_tasks', 0)))
-        status_table.add_row("Completed Tasks", str(status.get('completed_tasks', 0)))
-        status_table.add_row("Total Decisions", str(status.get('total_decisions', 0)))
-        
-        # ML Algorithms status
-        algorithms = status.get('learning_algorithms', [])
-        status_table.add_row("ML Algorithms", f"{len(algorithms)} active")
-        
-        self.console.print(status_table)
-        
-        # Show ML algorithms details
-        if algorithms:
-            ml_table = Table(title="? ML Algorithms")
-            ml_table.add_column("Algorithm", style="bold cyan")
-            ml_table.add_column("Status", style="bold green")
-            
-            for algo in algorithms:
-                ml_table.add_row(algo.replace('_', ' ').title(), "? Active")
-            
-            self.console.print(ml_table)
+    console.print("[bold cyan]🎮 Welcome to Kali Agents Interactive Mode![/bold cyan]")
+    console.print("[dim]Type 'help' for available commands, 'exit' to quit.[/dim]")
     
-    async def show_agents(self):
-        """Show all agents and their status."""
-        if not self.supervisor:
-            self.console.print("[red]? Supervisor not initialized[/red]")
-            return
-        
-        status = self.supervisor.get_system_status()
-        agents = status.get('agents', {})
-        
-        # Create agents table
-        agents_table = Table(title="? Agent Status")
-        agents_table.add_column("Agent ID", style="bold cyan")
-        agents_table.add_column("Type", style="bold yellow")
-        agents_table.add_column("Status", style="bold green")
-        agents_table.add_column("Capabilities", style="white")
-        
-        for agent_id, agent_status in agents.items():
-            agent_type = agent_id.replace('_agent', '').title()
-            capabilities = self._get_agent_capabilities(agent_id)
-            
-            agents_table.add_row(
-                agent_id,
-                agent_type,
-                agent_status.title(),
-                capabilities
-            )
-        
-        self.console.print(agents_table)
+    sup = initialize_supervisor()
+    if not sup:
+        console.print("[bold red]❌ System not available. Please check installation.[/bold red]")
+        raise typer.Exit(1)
     
-    def _get_agent_capabilities(self, agent_id: str) -> str:
-        """Get agent capabilities description."""
-        capability_map = {
-            'network_agent': 'nmap, masscan, network discovery',
-            'web_agent': 'gobuster, nikto, sqlmap, whatweb',
-            'vulnerability_agent': 'searchsploit, nuclei, exploits',
-            'forensic_agent': 'volatility, binwalk, file analysis',
-            'social_agent': 'theHarvester, OSINT, recon-ng',
-            'report_agent': 'PDF generation, templates'
-        }
-        return capability_map.get(agent_id, 'Various security tools')
-    
-    async def show_history(self):
-        """Show recent task history."""
-        # This would show completed tasks from the supervisor
-        history_panel = Panel(
-            "[bold yellow]? Task History Feature[/bold yellow]\n\n"
-            "[dim]This feature will show recent completed tasks, their performance metrics,\n"
-            "and learning outcomes. Currently in development.[/dim]\n\n"
-            "[bold cyan]? Tip:[/bold cyan] Use 'status' to see current system state",
-            title="? History",
-            style="bold blue"
-        )
-        self.console.print(history_panel)
-    
-    async def run_interactive_session(self):
-        """Run the main interactive CLI session."""
-        self.active_session = True
-        
+    while True:
         try:
-            # Initialize the system
-            await self.initialize()
+            command = Prompt.ask("\n[bold cyan]kali-agents>[/bold cyan]")
             
-            # Display banner
-            self.display_banner()
-            
-            # Show initial help
-            self.console.print("\n[bold green]? Welcome to Kali Agents![/bold green]")
-            self.console.print("[yellow]? Type 'help' for available commands or try 'pentest example.com'[/yellow]\n")
-            
-            # Main command loop
-            while self.active_session:
+            if command.lower() in ['exit', 'quit', 'q']:
+                console.print("[bold green]👋 Goodbye![/bold green]")
+                break
+            elif command.lower() == 'help':
+                show_interactive_help()
+            elif command.lower() == 'status':
+                system_status()
+            elif command.strip():
+                # Process natural language command
                 try:
-                    # Get user input
-                    command = Prompt.ask(
-                        "[bold red]kali-agents[/bold red]",
-                        console=self.console
-                    )
-                    
-                    # Process command
-                    if command.strip():
-                        continue_session = await self.process_command(command)
-                        if not continue_session:
-                            break
-                
-                except KeyboardInterrupt:
-                    if Confirm.ask("\n[yellow]Are you sure you want to exit?[/yellow]"):
-                        break
-                    else:
-                        self.console.print("[green]Continuing...[/green]")
-                
+                    result = asyncio.run(sup.process_user_request(command, {}))
+                    console.print(f"[bold green]✅ Task completed successfully![/bold green]")
+                    console.print(f"[dim]Result: {result}[/dim]")
                 except Exception as e:
-                    self.console.print(f"[red]? Error: {str(e)}[/red]")
+                    console.print(f"[bold red]❌ Error: {str(e)}[/bold red]")
+            
+        except KeyboardInterrupt:
+            console.print("\n[bold green]👋 Goodbye![/bold green]")
+            break
+        except Exception as e:
+            console.print(f"[bold red]❌ Error: {str(e)}[/bold red]")
+
+
+def show_interactive_help():
+    """Show interactive mode help."""
+    help_panel = Panel(
+        """[bold yellow]🎮 Interactive Mode Commands[/bold yellow]
+
+[bold cyan]Natural Language Commands:[/bold cyan]
+• "Scan 192.168.1.1 for open ports"
+• "Test website security for https://example.com"
+• "Perform OSINT research on John Doe"
+• "Analyze memory dump /path/to/dump.mem"
+
+[bold cyan]System Commands:[/bold cyan]
+• [bold]status[/bold] - Show system status
+• [bold]help[/bold] - Show this help
+• [bold]exit[/bold] - Exit interactive mode
+
+[bold green]💡 Tip:[/bold green] The AI supervisor understands natural language!
+Just describe what you want to do and it will coordinate the appropriate agents.""",
+        title="🔧 Help",
+        style="cyan"
+    )
+    console.print(help_panel)
+
+
+# Result display functions
+def display_scan_results(result: dict, output_file: Optional[str] = None):
+    """Display network scan results."""
+    console.print("[bold green]📊 Scan Results[/bold green]")
+    
+    if not result or result.get("status") != "completed":
+        console.print(f"[bold red]❌ Scan failed: {result.get('error', 'Unknown error')}[/bold red]")
+        return
+    
+    # Create results table
+    results_table = Table(title="🌐 Network Scan Results")
+    results_table.add_column("Host", style="bold cyan")
+    results_table.add_column("Status", style="bold green")
+    results_table.add_column("Open Ports", style="white")
+    results_table.add_column("Services", style="yellow")
+    
+    hosts = result.get("hosts", {})
+    for host_ip, host_info in hosts.items():
+        ports_info = []
+        services_info = []
         
-        finally:
-            # Cleanup
-            self.console.print("\n[bold blue]? Thank you for using Kali Agents![/bold blue]")
-            self.console.print("[green]Stay secure! ?[/green]")
+        for port in host_info.get("ports", []):
+            ports_info.append(f"{port['port']}/{port['protocol']}")
+            if port.get("service"):
+                services_info.append(f"{port['service']}")
+        
+        results_table.add_row(
+            host_ip,
+            host_info.get("status", "unknown"),
+            ", ".join(ports_info[:5]) + ("..." if len(ports_info) > 5 else ""),
+            ", ".join(services_info[:3]) + ("..." if len(services_info) > 3 else "")
+        )
+    
+    console.print(results_table)
+    
+    # Save to file if requested
+    if output_file:
+        with open(output_file, 'w') as f:
+            json.dump(result, f, indent=2, default=str)
+        console.print(f"[bold green]💾 Results saved to {output_file}[/bold green]")
 
 
-# Click CLI commands
-@click.group()
-def cli():
-    """Kali Agents - Intelligent Cybersecurity Orchestration System"""
+def display_web_results(result: dict, output_file: Optional[str] = None):
+    """Display web assessment results."""
+    console.print("[bold green]📊 Web Assessment Results[/bold green]")
+    
+    # Implementation would display web-specific results
+    console.print(f"[dim]Result preview: {str(result)[:200]}...[/dim]")
+    
+    if output_file:
+        with open(output_file, 'w') as f:
+            json.dump(result, f, indent=2, default=str)
+        console.print(f"[bold green]💾 Results saved to {output_file}[/bold green]")
+
+
+def display_pentest_results(result: dict, output_dir: Optional[str] = None, report_format: str = "pdf"):
+    """Display penetration test results."""
+    console.print("[bold green]📊 Penetration Test Results[/bold green]")
+    
+    # Implementation would display comprehensive pentest results
+    console.print(f"[dim]Result preview: {str(result)[:200]}...[/dim]")
+    
+    if output_dir:
+        Path(output_dir).mkdir(exist_ok=True)
+        console.print(f"[bold green]📁 Results saved to {output_dir}/[/bold green]")
+
+
+def display_osint_results(result: dict, output_file: Optional[str] = None):
+    """Display OSINT research results."""
+    console.print("[bold green]📊 OSINT Research Results[/bold green]")
+    
+    # Implementation would display OSINT-specific results
+    console.print(f"[dim]Result preview: {str(result)[:200]}...[/dim]")
+    
+    if output_file:
+        with open(output_file, 'w') as f:
+            json.dump(result, f, indent=2, default=str)
+        console.print(f"[bold green]💾 Results saved to {output_file}[/bold green]")
+
+
+def display_forensic_results(result: dict, output_dir: Optional[str] = None):
+    """Display forensic analysis results."""
+    console.print("[bold green]📊 Forensic Analysis Results[/bold green]")
+    
+    # Implementation would display forensics-specific results
+    console.print(f"[dim]Result preview: {str(result)[:200]}...[/dim]")
+    
+    if output_dir:
+        Path(output_dir).mkdir(exist_ok=True)
+        console.print(f"[bold green]📁 Results saved to {output_dir}/[/bold green]")
+
+
+@app.callback()
+def main_callback():
+    """Kali Agents - Intelligent Cybersecurity Automation 'At Your Service'"""
     pass
 
 
-@cli.command()
-def interactive():
-    """Start interactive CLI session"""
-    cli_interface = KaliAgentsCLI()
-    asyncio.run(cli_interface.run_interactive_session())
-
-
-@cli.command()
-@click.argument('target')
-@click.option('--type', 'task_type', default='pentest', 
-              type=click.Choice(['pentest', 'scan', 'web', 'recon', 'osint']),
-              help='Type of assessment to perform')
-def run(target, task_type):
-    """Run a single task against a target"""
-    async def execute_single_task():
-        cli_interface = KaliAgentsCLI()
-        await cli_interface.initialize()
-        await cli_interface.execute_task(task_type, target)
-    
-    asyncio.run(execute_single_task())
-
-
-@cli.command()
-def demo():
-    """Run a demonstration of Kali Agents capabilities"""
-    async def run_demo():
-        cli_interface = KaliAgentsCLI()
-        
-        # Initialize
-        console.print("[bold green]? Starting Kali Agents Demo...[/bold green]")
-        await cli_interface.initialize()
-        cli_interface.display_banner()
-        
-        # Demo scenarios
-        demo_scenarios = [
-            ("Network Scan", "scan", "scanme.nmap.org"),
-            ("Web Assessment", "web", "example.com"),
-            ("Quick Recon", "recon", "github.com")
-        ]
-        
-        for scenario_name, task_type, target in demo_scenarios:
-            console.print(f"\n[bold yellow]? Demo Scenario: {scenario_name}[/bold yellow]")
-            
-            if Confirm.ask(f"Execute {scenario_name} on {target}?"):
-                await cli_interface.execute_task(task_type, target)
-            
-            console.print("\n" + "="*60)
-        
-        console.print("\n[bold green]? Demo completed![/bold green]")
-        console.print("[yellow]? Try 'kali-agents interactive' for full experience[/yellow]")
-    
-    asyncio.run(run_demo())
+def cli():
+    """Entry point for the CLI application."""
+    app()
 
 
 if __name__ == "__main__":

@@ -249,10 +249,16 @@ class SupervisorAgent:
                 }
             }
         elif tool_name == "network_discovery":
+            # Ensure target is a valid IP address for the simulated network
+            import ipaddress
+            try:
+                ip = str(ipaddress.ip_address(target))
+            except Exception:
+                ip = "127.0.0.1"
             return {
                 "status": "completed",
-                "network": f"{target}/24",
-                "live_hosts": [{"ip": target, "hostname": target, "status": "up"}],
+                "network": f"{ip}/24",
+                "live_hosts": [{"ip": ip, "hostname": ip, "status": "up"}],
                 "total_hosts": 1
             }
         elif tool_name == "gobuster_directory":
