@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from fastmcp import Context, FastMCP
-from src.db.connection import execute_query, init_db
+from db.connection import execute_query, init_db
 
 mcp = FastMCP("DataServer")
 
@@ -114,7 +114,7 @@ async def store_scan_result(
         "scan_type": scan_type,
         "result": json.dumps(result),
     }
-    return await create_record("scan_results", data, ctx)
+    return await create_record.run("scan_results", data, ctx)
 
 
 @mcp.tool
@@ -122,7 +122,7 @@ async def get_scan_history(
     target: str, limit: int = 10, ctx: Optional[Context] = None
 ) -> List[Dict[str, Any]]:
     """Retrieve scan history for a target."""
-    records = await read_records("scan_results", {"target": target}, limit, ctx)
+    records = await read_records.run("scan_results", {"target": target}, limit, ctx)
     for rec in records:
         if rec.get("result"):
             try:

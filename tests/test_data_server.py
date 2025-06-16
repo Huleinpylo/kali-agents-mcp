@@ -30,10 +30,10 @@ def data_server(tmp_path, monkeypatch):
     dotenv_mod.load_dotenv = lambda: None  # type: ignore
     monkeypatch.setitem(sys.modules, "dotenv", dotenv_mod)
 
-    if "src.mcp_servers.data_server" in sys.modules:
-        module = reload(sys.modules["src.mcp_servers.data_server"])
+    if "mcp_servers.data_server" in sys.modules:
+        module = reload(sys.modules["mcp_servers.data_server"])
     else:
-        module = __import__("src.mcp_servers.data_server", fromlist=["*"])
+        module = __import__("mcp_servers.data_server", fromlist=["*"])
     return module
 
 

@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator, Sequence
 
-from src.config.settings import DATABASE_CONFIG
+from config.settings import DATABASE_CONFIG
 
 DB_PATH = Path(DATABASE_CONFIG["path"])
 
