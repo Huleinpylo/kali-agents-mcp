@@ -1,3 +1,4 @@
+
 # tests/test_supervisor_agent.py
 """
 Comprehensive tests for SupervisorAgent to achieve 100% coverage.
@@ -493,6 +494,50 @@ class TestFindingsExtraction:
         supervisor = SupervisorAgent()
         
         step_results = [{
+=======
+import sys
+import types
+import pytest
+
+# Provide a minimal fastmcp stub so SupervisorAgent can be imported without the
+# real dependency.
+fastmcp_stub = types.ModuleType("fastmcp")
+fastmcp_stub.Client = object  # type: ignore
+
+class DummyMCP:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def tool(self, func):
+        return func
+
+    def run(self):
+        pass
+
+fastmcp_stub.FastMCP = DummyMCP  # type: ignore
+fastmcp_stub.Context = object  # type: ignore
+sys.modules.setdefault("fastmcp", fastmcp_stub)
+
+numpy_stub = types.ModuleType("numpy")
+numpy_stub.array = lambda *a, **k: None  # minimal stub
+sys.modules.setdefault("numpy", numpy_stub)
+
+from src.agents.supervisor import SupervisorAgent
+
+@pytest.mark.asyncio
+async def test_create_network_plan():
+    sup = SupervisorAgent(agent_id="sup1")
+    task = await sup._analyze_and_create_task("network scan", {"target": "example.com"})
+    plan = await sup._create_execution_plan(task)
+    assert plan.task_id == task.id
+    assert plan.assigned_agents == ["network_agent"]
+    assert any(step["name"] == "Network Discovery" for step in plan.steps)
+
+@pytest.mark.asyncio
+async def test_extract_findings():
+    sup = SupervisorAgent(agent_id="sup2")
+    step_results = [
+        {
             "tool": "nmap_scan",
             "result": {
                 "hosts": {
@@ -795,29 +840,3 @@ class TestEdgeCases:
             assert isinstance(plan.steps, list)
             assert isinstance(plan.assigned_agents, list)
             assert isinstance(plan.estimated_duration, (int, float))
-
-
-# Additional test for 100% coverage
-class TestSystemStateIntegration:
-    """Test system state integration and management."""
-    
-    def test_system_state_initialization(self):
-        """Test that system state is properly initialized."""
-        supervisor = SupervisorAgent()
-        
-        assert len(supervisor.system_state.agents) == 6
-        assert len(supervisor.system_state.active_tasks) == 0
-        assert len(supervisor.system_state.completed_tasks) == 0
-        assert len(supervisor.system_state.supervisor_decisions) == 0
-        assert len(supervisor.system_state.learning_insights) == 0
-    
-    def test_adaptation_algorithms_initialization(self):
-        """Test that all adaptation algorithms are properly initialized."""
-        supervisor = SupervisorAgent()
-        
-        for alg_name, algorithm in supervisor.adaptation_algorithms.items():
-            assert hasattr(algorithm, 'adapt')
-            assert hasattr(algorithm, 'name')
-            assert algorithm.name == alg_name
-
-

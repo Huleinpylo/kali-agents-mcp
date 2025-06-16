@@ -91,6 +91,7 @@ cd kali-agents
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+pip install -r requirements-dev.txt  # tooling for tests (includes pytest-cov)
 ```
 
 ### Running the Data Server
@@ -114,6 +115,22 @@ kali-agents pentest --target company.com --scope full
 
 # OSINT gathering
 kali-agents osint --target "John Doe" --company "ACME Corp"
+```
+
+### Running Tests
+Create a development environment and install test dependencies:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
+
+Then execute the tests (coverage options are preconfigured in `pyproject.toml`):
+
+```bash
+./test.sh
 ```
 
 ## ? Use Cases
