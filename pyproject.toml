@@ -46,6 +46,7 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod"
 ]
+fail_under = 90
 
 [tool.black]
 line-length = 88
@@ -183,5 +184,3 @@ Repository = "https://github.com/Huleinpylo/kali-agents-mcp.git"
 Issues = "https://github.com/Huleinpylo/kali-agents-mcp/issues"
 Changelog = "https://github.com/Huleinpylo/kali-agents-mcp/blob/main/CHANGELOG.md"
 Security = "https://github.com/Huleinpylo/kali-agents-mcp/security/policy"
-
-fail_under = 90
