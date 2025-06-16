@@ -1,44 +1,26 @@
 """Data MCP Server - handles scan data storage."""
 
 import json
-import sqlite3
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastmcp import Context, FastMCP
-from src.config.settings import DATABASE_CONFIG
+from src.db.connection import execute_query, init_db
 
 mcp = FastMCP("DataServer")
-DB_PATH = Path(DATABASE_CONFIG["path"])
 
 
-def _get_conn() -> sqlite3.Connection:
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    return sqlite3.connect(DB_PATH)
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS scan_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    agent TEXT,
+    target TEXT,
+    scan_type TEXT,
+    result TEXT
+)
+"""
 
-
-def _init_db() -> None:
-    with _get_conn() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS scan_results (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                agent TEXT,
-                target TEXT,
-                scan_type TEXT,
-                result TEXT
-            )
-            """
-        )
-        conn.commit()
-
-
-def _dict_factory(cursor: sqlite3.Cursor, row: sqlite3.Row) -> Dict[str, Any]:
-    return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
-
-
-_init_db()
+init_db(SCHEMA)
 
 
 @mcp.tool
@@ -50,12 +32,10 @@ async def create_record(
     placeholders = ",".join("?" for _ in data)
     values = list(data.values())
 
-    with _get_conn() as conn:
-        cur = conn.execute(
-            f"INSERT INTO {table} ({keys}) VALUES ({placeholders})", values
-        )
-        conn.commit()
-        record_id = cur.lastrowid
+    record_id = execute_query(
+        f"INSERT INTO {table} ({keys}) VALUES ({placeholders})",
+        values,
+    )
 
     if ctx:
         await ctx.info(f"? Inserted into {table} id {record_id}")
@@ -79,10 +59,7 @@ async def read_records(
     query += " ORDER BY id DESC LIMIT ?"
     params.append(limit)
 
-    with _get_conn() as conn:
-        conn.row_factory = _dict_factory
-        cur = conn.execute(query, params)
-        rows = cur.fetchall()
+    rows = execute_query(query, params, fetch_all=True)
 
     if ctx:
         await ctx.info(f"? Retrieved {len(rows)} rows from {table}")
@@ -97,9 +74,10 @@ async def update_record(
     assignments = ", ".join(f"{k} = ?" for k in data)
     values = list(data.values()) + [record_id]
 
-    with _get_conn() as conn:
-        conn.execute(f"UPDATE {table} SET {assignments} WHERE id = ?", values)
-        conn.commit()
+    execute_query(
+        f"UPDATE {table} SET {assignments} WHERE id = ?",
+        values,
+    )
 
     if ctx:
         await ctx.info(f"? Updated {table} id {record_id}")
@@ -111,9 +89,10 @@ async def delete_record(
     table: str, record_id: int, ctx: Optional[Context] = None
 ) -> Dict[str, Any]:
     """Delete a record from a table."""
-    with _get_conn() as conn:
-        conn.execute(f"DELETE FROM {table} WHERE id = ?", (record_id,))
-        conn.commit()
+    execute_query(
+        f"DELETE FROM {table} WHERE id = ?",
+        (record_id,),
+    )
 
     if ctx:
         await ctx.info(f"? Deleted from {table} id {record_id}")
