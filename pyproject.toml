@@ -172,7 +172,7 @@ docs = [
 
 
 [project.scripts]
-kali-agents = "src.cli.main:app"
+kali-agents = "src.cli.main:cli"
 
 
 # Add OpenSSF Badge support
