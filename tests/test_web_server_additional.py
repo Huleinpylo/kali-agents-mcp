@@ -1,6 +1,5 @@
 import sys
 import types
-import pytest
 
 # Stub fastmcp so that web_server can be imported without the real package.
 fastmcp_stub = types.ModuleType("fastmcp")
