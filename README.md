@@ -93,6 +93,14 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Running the Data Server
+The Data MCP server stores scan results in a local SQLite database. Copy
+`.env.example` to `.env` and adjust `DB_PATH` if needed, then start the server:
+
+```bash
+python -m src.mcp_servers.data_server
+```
+
 ### Quick Start
 ```bash
 # Basic network scan
