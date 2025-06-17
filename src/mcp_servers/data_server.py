@@ -38,7 +38,7 @@ async def create_record(
     )
 
     if ctx:
-        await ctx.info(f"? Inserted into {table} id {record_id}")
+        await ctx.info(f"✓ Inserted into {table} id {record_id}")
     return {"status": "created", "id": record_id}
 
 
@@ -62,7 +62,7 @@ async def read_records(
     rows = execute_query(query, params, fetch_all=True)
 
     if ctx:
-        await ctx.info(f"? Retrieved {len(rows)} rows from {table}")
+        await ctx.info(f"✓ Retrieved {len(rows)} rows from {table}")
     return rows
 
 
@@ -80,7 +80,7 @@ async def update_record(
     )
 
     if ctx:
-        await ctx.info(f"? Updated {table} id {record_id}")
+        await ctx.info(f"✓ Updated {table} id {record_id}")
     return {"status": "updated", "id": record_id}
 
 
@@ -95,7 +95,7 @@ async def delete_record(
     )
 
     if ctx:
-        await ctx.info(f"? Deleted from {table} id {record_id}")
+        await ctx.info(f"✓ Deleted from {table} id {record_id}")
     return {"status": "deleted", "id": record_id}
 
 
@@ -114,7 +114,8 @@ async def store_scan_result(
         "scan_type": scan_type,
         "result": json.dumps(result),
     }
-    return await create_record.run("scan_results", data, ctx)
+    # Fix: Call the function directly, not with .run()
+    return await create_record("scan_results", data, ctx)
 
 
 @mcp.tool
@@ -122,7 +123,8 @@ async def get_scan_history(
     target: str, limit: int = 10, ctx: Optional[Context] = None
 ) -> List[Dict[str, Any]]:
     """Retrieve scan history for a target."""
-    records = await read_records.run("scan_results", {"target": target}, limit, ctx)
+    # Fix: Call the function directly, not with .run()
+    records = await read_records("scan_results", {"target": target}, limit, ctx)
     for rec in records:
         if rec.get("result"):
             try:
