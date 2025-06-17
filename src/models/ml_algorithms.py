@@ -66,7 +66,7 @@ class FuzzyLogicEngine(AdaptationAlgorithm):
         a, b, c = params
         if x <= a or x >= c:
             return 0.0
-        elif a < x <= b:
+        elif x <= b:
             return (x - a) / (b - a)
         else:
             return (c - x) / (c - b)
