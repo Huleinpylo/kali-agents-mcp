@@ -136,3 +136,8 @@ jobs:
         run: |
           pip install safety
           safety check --file requirements.txt || echo "⚠️ Vulnerabilities found in dependencies"
+      - name: Auto-merge dependabot PRs
+        if: ${{ github.actor == 'dependabot[bot]' && contains(join(github.event.pull_request.labels.*.name, ','), 'security') }}
+        uses: "pascalgn/automerge-action@v0.15.5"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
