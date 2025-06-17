@@ -9,6 +9,7 @@ We take the security of Kali Agents MCP seriously. If you discover a security vu
 **Please DO NOT report security vulnerabilities through public GitHub issues.**
 
 Instead, please report them to:
+
 - **GitHub Private Security Advisory**: Use the "Security" tab in this repository
 
 ### ? Response Timeline
@@ -18,6 +19,7 @@ We will acknowledge receipt of your vulnerability report within **72 hours** and
 ## ? Scope
 
 ### ? In Scope
+
 - Authentication and authorization bypasses
 - Remote code execution vulnerabilities
 - Injection vulnerabilities (SQL, Command, etc.)
@@ -28,6 +30,7 @@ We will acknowledge receipt of your vulnerability report within **72 hours** and
 - Privilege escalation vulnerabilities
 
 ### ? Out of Scope
+
 - Social engineering attacks
 - Physical attacks
 - Denial of service attacks
@@ -38,6 +41,7 @@ We will acknowledge receipt of your vulnerability report within **72 hours** and
 ## ? Security Best Practices for Users
 
 ### ? **CRITICAL: Authorized Use Only**
+
 This tool is designed for **authorized penetration testing and security research only**. Users are responsible for:
 
 - Obtaining proper authorization before testing any systems
@@ -46,6 +50,7 @@ This tool is designed for **authorized penetration testing and security research
 - Not using the tool for malicious purposes
 
 ### ?? **Installation Security**
+
 - Always install from official sources
 - Verify checksums and signatures
 - Use isolated environments (containers/VMs)
@@ -53,6 +58,7 @@ This tool is designed for **authorized penetration testing and security research
 - Follow principle of least privilege
 
 ### ? **Operational Security**
+
 - Enable comprehensive logging
 - Monitor agent activities
 - Use secure communication channels
@@ -69,6 +75,7 @@ This tool is designed for **authorized penetration testing and security research
 ## ? Security Features
 
 ### ? Built-in Security Controls
+
 - **Input Validation**: All user inputs are validated
 - **Authorization Checks**: Role-based access control
 - **Audit Logging**: Comprehensive activity logging
@@ -77,6 +84,7 @@ This tool is designed for **authorized penetration testing and security research
 - **Rate Limiting**: Protection against abuse
 
 ### ?? Planned Security Enhancements
+
 - [ ] Multi-factor authentication
 - [ ] Advanced threat detection
 - [ ] Real-time security monitoring
@@ -86,7 +94,9 @@ This tool is designed for **authorized penetration testing and security research
 ## ?? Legal Compliance
 
 ### ? Terms of Use
+
 By using Kali Agents MCP, you agree to:
+
 - Use the software only for legitimate security testing
 - Obtain proper authorization before testing any systems
 - Comply with all applicable laws in your jurisdiction
@@ -94,7 +104,9 @@ By using Kali Agents MCP, you agree to:
 - Take responsibility for any consequences of usage
 
 ### ? International Considerations
+
 Users must comply with local laws and regulations regarding:
+
 - Computer security testing
 - Data protection and privacy
 - Export control regulations
@@ -103,27 +115,33 @@ Users must comply with local laws and regulations regarding:
 ## ? Incident Response
 
 ### ? Detection
+
 If you suspect a security incident involving Kali Agents MCP:
+
 1. **Immediate Action**: Isolate affected systems
 2. **Documentation**: Preserve logs and evidence
 3. **Notification**: Contact the security team immediately
 4. **Assessment**: Conduct preliminary impact assessment
 
 ### ? Emergency Contacts
-- **Primary**: security@kali-agents.dev
+
+- **Primary**: <security@kali-agents.dev>
 - **Backup**: GitHub Security Advisory
 - **Escalation**: Project maintainers
 
 ## ? Security Updates
 
 ### ? Notification Process
+
 Security updates will be communicated through:
+
 - GitHub Security Advisories
 - Repository releases with security tags
 - Email notifications (if subscribed)
 - Documentation updates
 
 ### ? Update Priority Levels
+
 - **Critical**: Immediate patching required (within 24h)
 - **High**: Update within 7 days
 - **Medium**: Update within 30 days
@@ -132,12 +150,14 @@ Security updates will be communicated through:
 ## ? Security Resources
 
 ### ? Useful Links
+
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
 - [Kali Linux Security Guidelines](https://www.kali.org/docs/policy/)
 - [Responsible Disclosure Guidelines](https://www.bugcrowd.com/resource/what-is-responsible-disclosure/)
 
 ### ? Training Resources
+
 - Ethical hacking best practices
 - Penetration testing methodologies
 - Legal aspects of security testing
