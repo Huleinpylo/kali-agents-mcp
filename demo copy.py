@@ -30,7 +30,24 @@ try:
     from src.config.settings import KALI_TOOLS
     SYSTEM_AVAILABLE = True
 except ImportError:
-    SYSTEM_AVAILABLE = False
+    # Import standalone supervisor for demo
+    try:
+        from standalone_supervisor import create_supervisor_agent, AgentType, Priority, TaskStatus
+        KALI_TOOLS = {
+            "nmap": "/usr/bin/nmap",
+            "gobuster": "/usr/bin/gobuster", 
+            "sqlmap": "/usr/bin/sqlmap",
+            "nikto": "/usr/bin/nikto"
+        }
+        SYSTEM_AVAILABLE = True
+    except ImportError:
+        # Final fallback
+        create_supervisor_agent = None
+        AgentType = None
+        Priority = None
+        TaskStatus = None
+        KALI_TOOLS = {}
+        SYSTEM_AVAILABLE = False
 
 
 class ComprehensiveKaliDemo:
@@ -143,9 +160,15 @@ Let's see the intelligent orchestration in action! ⚡
                 
                 progress.update(task, description=f"✅ {step_desc}")
             
-            # Initialize the actual supervisor if available
-            if SYSTEM_AVAILABLE and 'create_supervisor_agent' in globals():
+            # Initialize the supervisor
+            if SYSTEM_AVAILABLE and create_supervisor_agent is not None:
                 self.supervisor = create_supervisor_agent()
+            else:
+                # Create a mock supervisor for demo purposes
+                class MockSupervisor:
+                    def __init__(self):
+                        self.name = "MockSupervisor"
+                self.supervisor = MockSupervisor()
         
         self.console.print("\n🎉 [bold green]System Initialization Complete![/bold green] 🎉\n")
     
