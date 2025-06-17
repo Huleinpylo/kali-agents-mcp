@@ -30,10 +30,28 @@ jobs:
 
     - name: Install dependencies
       run: |
+        # Install UVX for dependency management
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+        pip install uv
         
+        # If requirements.in exists, generate hashed requirements
+        if [ -f requirements.in ]; then
+          uv pip compile --generate-hashes requirements.in -o requirements-security.txt
+          uv pip install --require-hashes -r requirements-security.txt
+        # Otherwise fall back to existing requirements.txt
+        elif [ -f requirements.txt ]; then
+          uv pip install --require-hashes -r requirements.txt || uv pip install -r requirements.txt
+        fi
+        
+        # Same for dev dependencies which include security tools
+        if [ -f requirements-dev.in ]; then
+          uv pip compile --generate-hashes requirements-dev.in -o requirements-dev-security.txt
+          uv pip install --require-hashes -r requirements-dev-security.txt
+        elif [ -f requirements-dev.txt ]; then
+          uv pip install --require-hashes -r requirements-dev.txt || uv pip install -r requirements-dev.txt
+        fi
+        # Install security tools
+        pip install safety bandit semgrep pip-licenses trufflehog ossf-scorecard           
     - name: Run Safety (Dependency Vulnerability Check)
       run: |
         safety check --json --output safety-report.json || true

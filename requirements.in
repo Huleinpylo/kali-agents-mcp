@@ -1,0 +1,42 @@
+# This file is used to specify the dependencies for the project.
+# It is used by pip-tools to generate the requirements.txt file.
+aiohttp>=3.12.13 
+asyncio-mqtt>=0.16.2 
+authlib>=1.6.0 
+beautifulsoup4>=4.13.4 
+black>=25.1.0 
+fastapi>=0.115.12 
+fastmcp>=2.8.1 
+flake8>=7.2.0 
+httpx>=0.28.1 
+jinja2>=3.1.6 
+langchain>=0.3.25 
+langchain-community>=0.3.25 
+langchain-core>=0.3.65 
+langchain-ollama>=0.3.3 
+langchain-text-splitters>=0.3.8 
+langgraph>=0.4.8 
+langsmith>=0.3.45 
+loguru>=0.7.3 
+markdown-it-py>=3.0.0
+markupsafe>=3.0.2 
+marshmallow>=3.26.1
+mccabe>=0.7.0 
+mcp>=1.9.4 
+mdurl>=0.1.2 
+multidict>=6.4.4 
+mypy>=1.16.1 
+mypy-extensions>=1.1.0
+numpy>=2.2.6 ; python_full_version < '3.11'
+numpy>=2.3.0 ; python_full_version >= '3.11'
+pandas>=2.3.0 
+pathspec>=0.12
+pytest>=8.4.0 
+pytest-asyncio>=1.0.0 
+python-dotenv>=1.1.0 
+python-nmap>=0.7.1 
+pyyaml>=6.0.2 
+reportlab>=4.4.1 
+requests>=2.32.4 
+rich>=14.0.0 
+uvicorn>=0.34.3 

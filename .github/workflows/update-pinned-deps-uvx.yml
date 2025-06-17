@@ -1,0 +1,76 @@
+name: Update Pinned Dependencies with UVX
+
+on:
+  schedule:
+    # Run weekly on Monday at 2 AM UTC
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force dependency update'
+        required: false
+        default: 'false'
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install UVX
+        run: |
+          python -m pip install --upgrade pip
+          pip install uv
+      
+      - name: Generate requirements.txt with hashes
+        id: generate_main
+        run: |
+          if [ -f requirements.in ]; then
+            uv pip compile --generate-hashes requirements.in -o requirements.txt
+            echo "main_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "requirements.in not found, skipping"
+            echo "main_changed=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Generate requirements-dev.txt with hashes
+        id: generate_dev
+        run: |
+          if [ -f requirements-dev.in ]; then
+            uv pip compile --generate-hashes requirements-dev.in -o requirements-dev.txt
+            echo "dev_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "requirements-dev.in not found, skipping"
+            echo "dev_changed=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create Pull Request if changes
+        if: steps.generate_main.outputs.main_changed == 'true' || steps.generate_dev.outputs.dev_changed == 'true' || github.event.inputs.force_update == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "[security] Update pinned dependencies with hashes using UVX"
+          title: "[Security] Update pinned dependencies with hashes"
+          body: |
+            This PR updates the pinned dependencies with secure hashes using UVX.
+            
+            - Generated using UVX with --generate-hashes
+            - Updates security and supply chain protection
+            - Addresses pinned-dependencies security alert
+            - UVX provides faster dependency resolution than pip-tools
+            
+            Generated automatically by the update-pinned-deps-uvx workflow.
+          branch: security/update-pinned-deps
+          base: main
+          labels: security,dependencies

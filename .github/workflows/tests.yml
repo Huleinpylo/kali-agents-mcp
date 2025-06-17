@@ -39,14 +39,28 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y nmap masscan gobuster
 
-    - name: Install Python dependencies
+    - name: Install dependencies
       run: |
+        # Install UVX for dependency management
         python -m pip install --upgrade pip
-        pip install pytest pytest-cov pytest-asyncio pytest-mock
-        pip install flake8 black isort mypy
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
-
+        pip install uv
+        
+        # If requirements.in exists, generate hashed requirements
+        if [ -f requirements.in ]; then
+          uv pip compile --generate-hashes requirements.in -o requirements-ci.txt
+          uv pip install --require-hashes -r requirements-ci.txt
+        # Otherwise fall back to existing requirements.txt
+        elif [ -f requirements.txt ]; then
+          uv pip install --require-hashes -r requirements.txt || uv pip install -r requirements.txt
+        fi
+        
+        # Same for dev dependencies
+        if [ -f requirements-dev.in ]; then
+          uv pip compile --generate-hashes requirements-dev.in -o requirements-dev-ci.txt
+          uv pip install --require-hashes -r requirements-dev-ci.txt
+        elif [ -f requirements-dev.txt ]; then
+          uv pip install --require-hashes -r requirements-dev.txt || uv pip install -r requirements-dev.txt
+        fi
     - name: Lint with flake8
       run: |
         # Stop the build if there are Python syntax errors or undefined names
