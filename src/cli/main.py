@@ -24,6 +24,12 @@ try:
     from src.config.settings import KALI_TOOLS
     SYSTEM_AVAILABLE = True
 except ImportError:
+    # Fallback values when system not available
+    create_supervisor_agent = None
+    AgentType = None
+    Priority = None
+    TaskStatus = None
+    KALI_TOOLS = {}
     SYSTEM_AVAILABLE = False
 
 app = typer.Typer(
@@ -41,7 +47,7 @@ supervisor = None
 def initialize_supervisor():
     """Initialize the supervisor agent."""
     global supervisor
-    if SYSTEM_AVAILABLE and supervisor is None:
+    if SYSTEM_AVAILABLE and supervisor is None and create_supervisor_agent is not None:
         supervisor = create_supervisor_agent()
     return supervisor
 
@@ -296,12 +302,14 @@ def system_status():
         status_table.add_row("MCP Servers", "❌ Offline", "Cannot start servers")
     
     # Tool availability
-    if SYSTEM_AVAILABLE:
+    if SYSTEM_AVAILABLE and KALI_TOOLS:
         for tool_name, tool_path in KALI_TOOLS.items():
             if Path(tool_path).exists():
                 status_table.add_row(f"Tool: {tool_name}", "✅ Available", tool_path)
             else:
                 status_table.add_row(f"Tool: {tool_name}", "❌ Missing", tool_path)
+    else:
+        status_table.add_row("Tools", "❓ Unknown", "System not available")
     
     console.print(status_table)
     
@@ -316,10 +324,17 @@ def system_status():
             agents_table.add_column("Performance", style="yellow")
             
             for agent_id, agent_state in sup.system_state.agents.items():
-                performance = f"{agent_state.performance_metrics.success_rate * 100:.1f}%"
+                # Safely get performance metrics with fallback
+                performance = "N/A"
+                if hasattr(agent_state, 'success_rate') and getattr(agent_state, 'success_rate', None) is not None:
+                    try:
+                        performance = f"{getattr(agent_state, 'success_rate', 0) * 100:.1f}%"
+                    except Exception:
+                        performance = "N/A"
+                    
                 agents_table.add_row(
                     agent_id.replace("_", " ").title(),
-                    agent_state.agent_type.value,
+                    agent_state.agent_type.value if hasattr(agent_state, 'agent_type') and agent_state.agent_type else "Unknown",
                     "✅ Ready",
                     performance
                 )

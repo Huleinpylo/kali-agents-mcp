@@ -1,0 +1,34 @@
+{
+    "servers": {
+        "network_agent": {
+            "command": "python",
+            "args": ["-m", "src.mcp_servers.network_server"],
+            "env": {}
+        },
+        "web_agent": {
+            "command": "python", 
+            "args": ["-m", "src.mcp_servers.web_server"],
+            "env": {}
+        },
+        "vulnerability_agent": {
+            "command": "python",
+            "args": ["-m", "src.mcp_servers.vuln_server"], 
+            "env": {}
+        },
+        "forensic_agent": {
+            "command": "python",
+            "args": ["-m", "src.mcp_servers.forensic_server"],
+            "env": {}
+        },
+        "social_agent": {
+            "command": "python",
+            "args": ["-m", "src.mcp_servers.social_server"],
+            "env": {}
+        },
+        "report_agent": {
+            "command": "python",
+            "args": ["-m", "src.mcp_servers.report_server"],
+            "env": {}
+        }
+    }
+}
