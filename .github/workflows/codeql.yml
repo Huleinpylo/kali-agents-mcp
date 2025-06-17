@@ -1,0 +1,87 @@
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '30 1 * * 0'  # Run at 1:30 UTC every Sunday
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 120  # Increased timeout for larger codebases
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+
+    # If this run was triggered by a pull request event, then checkout
+    # the head of the pull request instead of the merge commit.
+    - run: git checkout HEAD^2
+      if: ${{ github.event_name == 'pull_request' }}
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        config-file: ./.github/codeql/codeql-config.yml
+        queries: security-extended,security-and-quality
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies with UVX
+      run: |
+        python -m pip install --upgrade pip
+        pip install uv
+        
+        # Install main dependencies
+        if [ -f requirements.in ]; then
+          uv pip compile --generate-hashes requirements.in -o requirements-codeql.txt
+          uv pip install --require-hashes -r requirements-codeql.txt
+        elif [ -f requirements.txt ]; then
+          uv pip install --require-hashes -r requirements.txt || uv pip install -r requirements.txt
+        fi
+        
+        # Install dev dependencies for testing tools
+        if [ -f requirements-dev.in ]; then
+          uv pip compile --generate-hashes requirements-dev.in -o requirements-dev-codeql.txt
+          uv pip install --require-hashes -r requirements-dev-codeql.txt
+        elif [ -f requirements-dev.txt ]; then
+          uv pip install --require-hashes -r requirements-dev.txt || uv pip install -r requirements-dev.txt
+        fi
+
+    # Autobuild attempts to build any compiled languages
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
+        
+    # Upload the results as artifacts for reference
+    - name: Upload CodeQL results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: codeql-results
+        path: ${{ runner.temp }}/*/results
+        retention-days: 7

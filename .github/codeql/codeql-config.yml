@@ -1,0 +1,77 @@
+name: "Kali Agents MCP CodeQL Configuration"
+
+# Specify which queries to run
+queries:
+  - uses: security-and-quality
+  - uses: security-extended
+
+# Specify which paths to analyze and which to ignore
+paths:
+  - src
+  - tests
+paths-ignore:
+  - 'tests/data/**'  # Ignore test data files
+  - '**/*.md'        # Ignore markdown files
+  - '**/*.txt'       # Ignore text files
+  - '**/*.json'      # Ignore JSON files
+  - '**/*.yaml'      # Ignore YAML files
+  - '**/*.yml'       # Ignore YML files except GitHub workflows
+  - '!.github/workflows/*.yml'  # Include GitHub workflow files
+
+# Specify timeout settings
+query-filters:
+  - exclude:
+      problem.severity:
+        - note
+
+# Python-specific settings
+python:
+  # Define Python version range
+  version: "3.10-3.13"  # Analyze for Python 3.10 to 3.13
+  
+  # Specific Python packages to consider during analysis based on your requirements.in
+  packages:
+    # MCP & Agent Framework
+    - name: fastmcp
+      version: "2.8.1"
+    - name: langchain
+      version: "0.3.25"
+    - name: langchain-community
+      version: "0.3.25"
+    - name: langgraph
+      version: "0.4.8"
+    - name: langchain-ollama
+      version: "0.3.3"
+      
+    # Web & API
+    - name: fastapi
+      version: "0.115.12"
+    - name: uvicorn
+      version: "0.34.3"
+    - name: httpx
+      version: "0.28.1"
+      
+    # Data processing
+    - name: pandas
+      version: "2.3.0"
+    - name: numpy
+      version: "2.2.6"
+      
+    # Network & Security
+    - name: python-nmap
+      version: "0.7.1"
+    - name: requests
+      version: "2.32.4"
+    - name: aiohttp
+      version: "3.12.13"
+      
+    # Logging & Configuration
+    - name: loguru
+      version: "0.7.3"
+    - name: python-dotenv
+      version: "1.1.0"
+      
+  # Add additional code models as needed
+  extractor:
+    python:
+      python_version: "3.11"
