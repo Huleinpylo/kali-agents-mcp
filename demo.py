@@ -5,6 +5,9 @@ Kali Agents Demo - "At Your Service"
 This demo showcases the intelligent orchestration capabilities of Kali Agents.
 It demonstrates how the ML-driven supervisor coordinates specialized agents
 to perform complex cybersecurity tasks.
+
+Before editing, review `AGENTS.md` (repo workflow) and `CONTEXT.MD`
+(Pydantic AI reference) so demo changes reinforce the expected agent patterns.
 """
 
 import asyncio

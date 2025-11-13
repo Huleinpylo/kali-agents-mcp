@@ -65,6 +65,8 @@ KALI_TOOLS = {
     "dirb": os.getenv("DIRB_PATH", "/usr/bin/dirb"),
     "masscan": os.getenv("MASSCAN_PATH", "/usr/bin/masscan"),
     "searchsploit": os.getenv("SEARCHSPLOIT_PATH", "/usr/bin/searchsploit"),
+    "nuclei": os.getenv("NUCLEI_PATH", "/usr/bin/nuclei"),
+    "msfconsole": os.getenv("MSFCONSOLE_PATH", "/usr/bin/msfconsole"),
 }
 
 # Wordlists Configuration

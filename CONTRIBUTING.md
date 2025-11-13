@@ -2,6 +2,10 @@
 
 ? **Thank you for your interest in contributing to Kali Agents MCP!** This project aims to revolutionize cybersecurity automation while maintaining the highest security and ethical standards.
 
+- Start with `AGENTS.md` for a concise repository overview (structure, tooling, expectations).
+- Keep `CONTEXT.MD` handy; it lists the Pydantic AI documentation that powers our agent architecture.
+- Review `memory.md` at the start of every session to learn about outstanding failures, priorities, and recent fixes.
+
 ## ? Project Mission
 
 **"Kali Agents at Your Service"** - Transform Kali Linux from a toolbox into an intelligent cybersecurity assistant that orchestrates complex security workflows automatically.

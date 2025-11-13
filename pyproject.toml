@@ -107,6 +107,17 @@ skips = ["B101", "B601"]  # assert_used, shell_injection (we need these for Kali
 [tool.bandit.assert_used]
 skips = ["**/test_*.py", "**/tests/*.py"]
 
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E203", "E501"]
+
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"

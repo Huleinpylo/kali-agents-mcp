@@ -26,6 +26,12 @@ repos:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
 
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:

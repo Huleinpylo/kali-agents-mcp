@@ -133,6 +133,47 @@ Then execute the tests (coverage options are preconfigured in `pyproject.toml`):
 ./test.sh
 ```
 
+### REST API (Web & Network Scans)
+Spin up the FastAPI server to drive scans from tools like AG-UI or custom dashboards:
+
+```bash
+export KALI_AGENTS_API_KEY=dev-token
+uvicorn src.api.main:app --reload
+```
+
+Call the endpoints with Bearer auth:
+
+```bash
+curl -X POST http://127.0.0.1:8000/network/scan \
+  -H "Authorization: Bearer $KALI_AGENTS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"target": "192.168.1.10", "scan_type": "stealth"}'
+```
+
+Interactive docs are available at `http://127.0.0.1:8000/docs`.
+
+### Docker & Compose
+Build portable images (API + CLI) with the provided multi-stage Dockerfile:
+
+```bash
+docker build --target api -t kali-agents-api .
+docker build --target cli -t kali-agents-cli .
+```
+
+Run the API container (exposes FastAPI + WebSocket endpoints):
+
+```bash
+docker run -p 8000:8000 -e KALI_AGENTS_API_KEY=dev-token kali-agents-api
+```
+
+Or orchestrate the API, CLI, and data MCP server together:
+
+```bash
+docker compose up --build
+```
+
+Mount `.env`/data folders via `volumes` in `docker-compose.yml` to keep secrets and scan outputs outside the container.
+
 ## ? Use Cases
 
 ### For Penetration Testers
@@ -175,6 +216,10 @@ Then execute the tests (coverage options are preconfigured in `pyproject.toml`):
 ## ? Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+- Read `AGENTS.md` for day-to-day repository guidelines (structure, commands, testing).
+- Consult `CONTEXT.MD` for the Pydantic AI reference materials that inform our agent patterns.
+- Skim `memory.md` before each work session to inherit the latest testing notes, priorities, and regressions.
 
 ## ? License
 

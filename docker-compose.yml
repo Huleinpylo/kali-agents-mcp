@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      target: api
+    ports:
+      - "8000:8000"
+    environment:
+      KALI_AGENTS_API_KEY: ${KALI_AGENTS_API_KEY:-dev-token}
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./data:/app/data:z
+
+  cli:
+    build:
+      context: .
+      target: cli
+    entrypoint: ["kali-agents"]
+    command: ["--help"]
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./reports:/app/reports:z
+
+  data-server:
+    build:
+      context: .
+      target: cli
+    command: ["python", "-m", "src.mcp_servers.data_server"]
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./data:/app/data:z
