@@ -137,16 +137,16 @@ jobs:
       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@ef36b69c6d7c22bd9d0183f534d82d47639dc745 # v2.28.1
+      uses: github/codeql-action/init@ae78991f558bb4195cb8a727cb6679c362b9cf24 # v2.28.1
       with:
         languages: ${{ matrix.language }}
         queries: security-and-quality
 
     - name: Autobuild
-      uses: github/codeql-action/autobuild@ef36b69c6d7c22bd9d0183f534d82d47639dc745 # v2.28.1
+      uses: github/codeql-action/autobuild@ae78991f558bb4195cb8a727cb6679c362b9cf24 # v2.28.1
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@ef36b69c6d7c22bd9d0183f534d82d47639dc745 # v2.28.1
+      uses: github/codeql-action/analyze@ae78991f558bb4195cb8a727cb6679c362b9cf24 # v2.28.1
       with:
         category: "/language:${{matrix.language}}"
 
@@ -238,6 +238,6 @@ jobs:
         publish_results: true
 
     - name: Upload SARIF results
-      uses: github/codeql-action/upload-sarif@ef36b69c6d7c22bd9d0183f534d82d47639dc745 # v2.28.1
+      uses: github/codeql-action/upload-sarif@ae78991f558bb4195cb8a727cb6679c362b9cf24 # v2.28.1
       with:
         sarif_file: results.sarif
