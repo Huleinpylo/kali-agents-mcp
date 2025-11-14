@@ -9,8 +9,47 @@ import types
 from unittest.mock import Mock, AsyncMock, patch
 from pathlib import Path
 
-# Ensure missing plugins do not cause import errors
-sys.modules.setdefault("pytest_asyncio", type(sys)("pytest_asyncio"))
+# Ensure the repository root (which contains the `src` package) is first on sys.path
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+SRC_ROOT = REPO_ROOT / "src"
+if SRC_ROOT.exists() and str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+# Provide lightweight stubs if optional heavy dependencies are unavailable.
+try:
+    import fastmcp  # type: ignore  # noqa: F401
+except ModuleNotFoundError:  # pragma: no cover - fallback only when dep missing
+    fastmcp_stub = types.ModuleType("fastmcp")
+
+    class _DummyFastMCP:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def tool(self, func):
+            return func
+
+        def run(self):
+            return None
+
+    fastmcp_stub.FastMCP = _DummyFastMCP  # type: ignore[attr-defined]
+    fastmcp_stub.Client = object  # type: ignore[attr-defined]
+    fastmcp_stub.Context = object  # type: ignore[attr-defined]
+    sys.modules["fastmcp"] = fastmcp_stub
+
+try:
+    import numpy  # type: ignore  # noqa: F401
+except ModuleNotFoundError:  # pragma: no cover - fallback only when dep missing
+    numpy_stub = types.ModuleType("numpy")
+    numpy_stub.array = lambda *args, **kwargs: args or kwargs  # minimal stub
+    sys.modules["numpy"] = numpy_stub
+
+# Ensure missing plugins do not cause import errors (but prefer the real module).
+try:
+    import pytest_asyncio  # type: ignore  # noqa: F401
+except ModuleNotFoundError:  # pragma: no cover - fallback for slim envs
+    sys.modules.setdefault("pytest_asyncio", types.ModuleType("pytest_asyncio"))
 
 # Test fixtures for common mocks
 @pytest.fixture
@@ -389,9 +428,6 @@ def pytest_sessionstart(session):
         mod.load_dotenv = lambda: None # type: ignore
         monkeypatch.setitem(sys.modules, "dotenv", mod)
 
-    mock_pytest_asyncio = types.ModuleType("pytest_asyncio")
-    mock_pytest_asyncio.__name__ = "pytest_asyncio"
-    sys.modules.setdefault("pytest_asyncio", mock_pytest_asyncio)
 
 def pytest_sessionfinish(session, exitstatus):
     """Cleanup test environment"""

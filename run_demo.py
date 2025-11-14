@@ -5,6 +5,9 @@ Kali Agents Complete Demo - "At Your Service"
 This comprehensive demo showcases the intelligent orchestration capabilities 
 of Kali Agents MCP system, featuring ML-driven agent coordination and 
 cybersecurity automation.
+
+Note for automation runners and AI assistants: consult `AGENTS.md` and `CONTEXT.MD`
+before modifying demo flows so behavior mirrors the documented production patterns.
 """
 
 import asyncio

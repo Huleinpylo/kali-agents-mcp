@@ -11,16 +11,18 @@ import xml.etree.ElementTree as ET
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 import asyncio
+import ipaddress
+import re
 
 from fastmcp import FastMCP, Context
 from src.config.settings import KALI_TOOLS, NETWORK_CONFIG
 
 
-# Create the MCP server instance
-mcp = FastMCP("NetworkAgent")
+# Create the MCP server instance used for tool registration
+_mcp_app = FastMCP("NetworkAgent")
 
 
-@mcp.tool
+@_mcp_app.tool
 async def nmap_scan(
     target: str,
     scan_type: str = "stealth",
@@ -119,7 +121,7 @@ async def nmap_scan(
         }
 
 
-@mcp.tool
+@_mcp_app.tool
 async def masscan_ports(
     target: str,
     ports: str = "1-1000",
@@ -212,7 +214,7 @@ async def masscan_ports(
         }
 
 
-@mcp.tool
+@_mcp_app.tool
 async def network_discovery(
     network: str,
     method: str = "ping",
@@ -396,6 +398,128 @@ def _parse_discovery_output(output: str) -> List[Dict[str, str]]:
     return hosts
 
 
+class NetworkServer:
+    """Lightweight wrapper that mirrors the MCP network tools for direct invocation."""
+
+    def __init__(self, app: Optional[FastMCP] = None):
+        self.app = app or _mcp_app
+        self.tools = getattr(self.app, "tools", {})
+
+    def _validate_ip(self, value: str) -> bool:
+        """Validate IPv4/IPv6 addresses."""
+        try:
+            ipaddress.ip_network(value, strict=False)
+            return True
+        except ValueError:
+            return False
+
+    def _validate_port_range(self, value: str) -> bool:
+        """Validate common port specifications (80, 1-1000, 80,443)."""
+        if not value:
+            return False
+        segments = [segment.strip() for segment in value.split(",") if segment.strip()]
+        if not segments:
+            return False
+        for segment in segments:
+            if "-" in segment:
+                try:
+                    start, end = segment.split("-", 1)
+                    start_port = int(start)
+                    end_port = int(end)
+                except ValueError:
+                    return False
+                if start_port < 1 or end_port > 65535 or start_port > end_port:
+                    return False
+            else:
+                try:
+                    port = int(segment)
+                except ValueError:
+                    return False
+                if port < 1 or port > 65535:
+                    return False
+        return True
+
+    def _sanitize_target(self, target: str) -> str:
+        """Remove shell metacharacters to guard subprocess executions."""
+        return re.sub(r"[^A-Za-z0-9._:/-]", "", target)
+
+    async def _execute_nmap_scan(
+        self,
+        target: str,
+        ports: str = "top-1000",
+        scan_type: str = "stealth",
+        ctx: Optional[Context] = None,
+    ) -> Dict[str, Any]:
+        return await nmap_scan(target=target, scan_type=scan_type, ports=ports, ctx=ctx)
+
+    async def _execute_network_discovery(
+        self,
+        network: str,
+        ports: str = "top-1000",
+        ctx: Optional[Context] = None,
+    ) -> Dict[str, Any]:
+        return await self._execute_nmap_scan(network, ports=ports, ctx=ctx)
+
+    async def _execute_port_scan(
+        self,
+        target: str,
+        ports: str,
+        protocol: str = "tcp",
+        ctx: Optional[Context] = None,
+    ) -> Dict[str, Any]:
+        scan_type = "udp" if protocol.lower() == "udp" else "stealth"
+        return await self._execute_nmap_scan(target, ports=ports, scan_type=scan_type, ctx=ctx)
+
+    async def _execute_masscan(
+        self,
+        target: str,
+        ports: str = "1-1000",
+        rate: int = 1000,
+        ctx: Optional[Context] = None,
+    ) -> Dict[str, Any]:
+        return await masscan_ports(target=target, ports=ports, rate=rate, ctx=ctx)
+
+    async def _execute_os_detection(self, target: str, ctx: Optional[Context] = None) -> Dict[str, Any]:
+        return await self._execute_nmap_scan(target, scan_type="aggressive", ctx=ctx)
+
+    async def _execute_service_detection(
+        self,
+        target: str,
+        ports: str = "top-1000",
+        ctx: Optional[Context] = None,
+    ) -> Dict[str, Any]:
+        return await self._execute_nmap_scan(target, ports=ports, scan_type="version", ctx=ctx)
+
+    async def _execute_zmap(
+        self,
+        target: str,
+        ports: str = "1-1000",
+        rate: int = 1000,
+        ctx: Optional[Context] = None,
+    ) -> Dict[str, Any]:
+        return self._not_implemented("zmap_scan", target=target, ports=ports, rate=rate)
+
+    async def _execute_arp_scan(self, network: str, ctx: Optional[Context] = None) -> Dict[str, Any]:
+        return self._not_implemented("arp_scan", network=network)
+
+    async def _execute_netdiscover(self, network: str, ctx: Optional[Context] = None) -> Dict[str, Any]:
+        return self._not_implemented("netdiscover", network=network)
+
+    @staticmethod
+    def _not_implemented(tool: str, **extra: Any) -> Dict[str, Any]:
+        return {"status": "not_implemented", "tool": tool, **extra}
+
+
+# Export the class under the historical `mcp` name so tests importing
+# `mcp as NetworkServer` continue to receive a usable type, while the actual
+# FastMCP instance remains available as `_mcp_app`.
+mcp = NetworkServer
+network_mcp_app = _mcp_app
+
+
+__all__ = ["NetworkServer", "mcp", "network_mcp_app", "nmap_scan", "masscan_ports", "network_discovery"]
+
+
 if __name__ == "__main__":
     # Run the MCP server
-    mcp.run()
+    network_mcp_app.run()

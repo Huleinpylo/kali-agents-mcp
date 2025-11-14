@@ -3,6 +3,10 @@ Standalone Supervisor Agent for Demo Purposes
 
 This is a simplified version of the supervisor that works independently
 for demonstration purposes when the full system isn't available.
+
+⚠️  Developers and AI copilots: read `AGENTS.md` (workflow expectations) and
+`CONTEXT.MD` (Pydantic AI reference) before extending this module so demos stay
+aligned with production conventions.
 """
 
 import asyncio

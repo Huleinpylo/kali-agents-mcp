@@ -1,35 +1,39 @@
+# Kali Agents MCP - Development Dependencies
+# Generated: 2025-01-13
+# Python: 3.9+
+#
+# Install with: pip install -r requirements-dev.txt
+# This automatically includes production dependencies from requirements.txt
 
-# Development Dependencies
-pytest
-pytest-cov
-pytest-asyncio
-pytest-mock
-pytest-benchmark
+# Production Dependencies
+-r requirements.txt
 
+# Testing Tools
+pytest-cov==4.1.0              # Coverage reporting for pytest
+pytest-mock==3.14.0            # Mocking support for pytest
+pytest-benchmark==4.0.0        # Performance benchmarking
+pytest-xdist==3.5.0            # Parallel test execution
 
 # Code Quality
-black
-isort
-flake8
-mypy
+black==25.1.0                  # Code formatting
+isort==5.13.2                  # Import sorting
+flake8==7.2.0                  # Linting
+mypy==1.16.1                   # Static type checking
+
+# Security Scanning
+bandit==1.7.5                  # Security vulnerability scanner
+safety==3.0.1                  # Dependency vulnerability checker
+semgrep==1.55.2                # Semantic code analysis
 
 # Documentation
-sphinx
-sphinx-rtd-theme
-sphinx-autodoc-typehints
-# Core Dependencies
-
-# Security Testing
-bandit
-safety
-semgrep
+sphinx==7.2.6                  # Documentation generator
+sphinx-rtd-theme==2.0.0        # Read the Docs theme
+sphinx-autodoc-typehints==1.25.3  # Type hints in docs
 
 # Performance Testing
-memory-profiler
+memory-profiler==0.61.0        # Memory usage profiling
 
-# Utilities
-docker
-kubernetes
-# Additional Libraries
-pip-licenses
-rich>=13.9.4
+# Development Utilities
+ipython==8.21.0                # Enhanced Python shell
+ipdb==0.13.13                  # IPython debugger
+pip-licenses==4.3.4            # License checker for dependencies
