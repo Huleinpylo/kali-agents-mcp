@@ -2,6 +2,8 @@
 
 This document describes the specialized Claude Code agents available for the Kali Agents project. These agents are designed to accelerate development while maintaining security and quality standards.
 
+**Latest milestone (2025-01-15)**: The Vulnerability MCP server shipped with 4 hardened tool integrations, security-first parsers, and 62 tests thanks to repeated use of `parser-generator`, `coverage-enforcer`, and `pydantic-agent-builder`. Reuse the same trio for the upcoming Forensic, Social, and Report agents.
+
 ## Available Agents
 
 ### 1. MCP Security Validator (`mcp-security-validator`)

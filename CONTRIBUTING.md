@@ -74,7 +74,12 @@ source venv/bin/activate  # On Windows: venv\\Scripts\\activate
 # Install dependencies
 pip install -r requirements.txt
 pip install -r requirements-dev.txt  # Development dependencies
+
+# For more information about dependency management:
+# See docs/dependency-management.md
 ```
+
+> **Note**: For detailed information about dependency management, version pinning strategy, and update procedures, see [docs/dependency-management.md](docs/dependency-management.md)
 
 #### 2. **Create Feature Branch**
 ```bash

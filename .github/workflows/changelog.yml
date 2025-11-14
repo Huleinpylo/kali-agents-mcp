@@ -1,0 +1,54 @@
+name: Changelog Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/**'
+
+jobs:
+  check-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if CHANGELOG.md was updated
+        run: |
+          echo "Checking if CHANGELOG.md was updated in this PR..."
+
+          # Get the base branch (usually main or master)
+          BASE_REF="${{ github.event.pull_request.base.ref }}"
+
+          # Check if CHANGELOG.md has changes
+          if git diff origin/$BASE_REF HEAD -- CHANGELOG.md | grep -q "^+.*"; then
+            echo "✅ CHANGELOG.md has been updated"
+            echo "changelog_updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️  CHANGELOG.md was not updated in this PR"
+            echo "⚠️  If this PR adds features, fixes bugs, or makes other notable changes,"
+            echo "⚠️  please consider updating CHANGELOG.md under the [Unreleased] section."
+            echo ""
+            echo "See https://keepachangelog.com for formatting guidelines."
+            echo "changelog_updated=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Don't fail the check - this is just a reminder
+          exit 0
+
+      - name: Comment on PR (if CHANGELOG not updated)
+        if: steps.check-changelog.outputs.changelog_updated == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Reminder**: Consider updating `CHANGELOG.md` if this PR introduces notable changes.\n\nSee [Keep a Changelog](https://keepachangelog.com) for formatting guidelines.'
+            })
+        continue-on-error: true

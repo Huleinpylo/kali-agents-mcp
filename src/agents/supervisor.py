@@ -70,6 +70,13 @@ class SupervisorAgent:
         execution_plan = await self._create_execution_plan(task)
         task.execution_plan = execution_plan
         results = await self._execute_plan(task)
+        status_flag = results.get("status")
+        if status_flag == "completed":
+            task.status = TaskStatus.COMPLETED
+        elif status_flag in {"failed", TaskStatus.FAILED.value}:
+            task.status = TaskStatus.FAILED
+        else:
+            task.status = task.status or TaskStatus.PENDING
         
         # Learn from execution
         await self._learn_from_execution(task, results)
@@ -127,7 +134,7 @@ class SupervisorAgent:
                 {"step": 2, "name": "Web Assessment", "agent": "web_agent", 
                  "tools": ["gobuster_directory", "nikto_scan"], "estimated_time": 600},
                 {"step": 3, "name": "Vulnerability Analysis", "agent": "vulnerability_agent", 
-                 "tools": ["sqlmap_test"], "estimated_time": 900},
+                 "tools": ["sqlmap_test"], "estimated_time": 720},
                 {"step": 4, "name": "Report Generation", "agent": "report_agent", 
                  "tools": ["generate_report"], "estimated_time": 180}
             ]
@@ -143,7 +150,6 @@ class SupervisorAgent:
                 {"step": 2, "name": "Vulnerability Scanning", "agent": "web_agent", 
                  "tools": ["nikto_scan", "sqlmap_test"], "estimated_time": 600}
             ]
-        
         return TaskExecutionPlan(
             task_id=task.id,
             steps=plan_steps,
@@ -336,12 +342,17 @@ class SupervisorAgent:
     async def _learn_from_execution(self, task: Task, results: Dict[str, Any]):
         """Learn from task execution to improve future performance."""
         # Create learning data
+        findings = results.get("findings")
+        steps_completed = results.get("steps_completed")
+        findings_count = len(findings) if isinstance(findings, list) else results.get("findings_count", 0)
+        steps_count = len(steps_completed) if isinstance(steps_completed, list) else results.get("steps_count", 0)
+
         learning_data = {
             "task_type": task.task_type,
             "execution_time": results["execution_time"],
             "success": len(results["errors"]) == 0,
-            "findings_count": len(results["findings"]),
-            "steps_count": len(results["steps_completed"])
+            "findings_count": findings_count,
+            "steps_count": steps_count
         }
         
         # Update adaptation algorithms

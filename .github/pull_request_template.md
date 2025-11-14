@@ -63,7 +63,7 @@ New coverage: XX%
 - [ ] API documentation updated (if needed)
 - [ ] Security documentation updated (if needed)
 - [ ] User guide updated (if needed)
-- [ ] Changelog updated
+- [ ] **CHANGELOG.md updated** (required for notable changes - see [Keep a Changelog](https://keepachangelog.com/))
 
 ## ? Backward Compatibility
 

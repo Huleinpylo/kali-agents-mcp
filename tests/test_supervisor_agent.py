@@ -488,124 +488,96 @@ class TestToolSimulation:
 
 class TestFindingsExtraction:
     """Test security findings extraction from tool results."""
-    
+
     def test_extract_findings_open_ports(self):
         """Test extraction of open ports as findings."""
         supervisor = SupervisorAgent()
-        
-        step_results = [{
-=======
-import sys
-import types
-import pytest
 
-# Provide a minimal fastmcp stub so SupervisorAgent can be imported without the
-# real dependency.
-fastmcp_stub = types.ModuleType("fastmcp")
-fastmcp_stub.Client = object  # type: ignore
-
-class DummyMCP:
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def tool(self, func):
-        return func
-
-    def run(self):
-        pass
-
-fastmcp_stub.FastMCP = DummyMCP  # type: ignore
-fastmcp_stub.Context = object  # type: ignore
-sys.modules.setdefault("fastmcp", fastmcp_stub)
-
-numpy_stub = types.ModuleType("numpy")
-numpy_stub.array = lambda *a, **k: None  # minimal stub
-sys.modules.setdefault("numpy", numpy_stub)
-
-from src.agents.supervisor import SupervisorAgent
-
-@pytest.mark.asyncio
-async def test_create_network_plan():
-    sup = SupervisorAgent(agent_id="sup1")
-    task = await sup._analyze_and_create_task("network scan", {"target": "example.com"})
-    plan = await sup._create_execution_plan(task)
-    assert plan.task_id == task.id
-    assert plan.assigned_agents == ["network_agent"]
-    assert any(step["name"] == "Network Discovery" for step in plan.steps)
-
-@pytest.mark.asyncio
-async def test_extract_findings():
-    sup = SupervisorAgent(agent_id="sup2")
-    step_results = [
-        {
-            "tool": "nmap_scan",
-            "result": {
-                "hosts": {
-                    "example.com": {
-                        "status": "up",
-                        "ports": [
-                            {"port": 22, "protocol": "tcp", "service": "ssh", "state": "open"},
-                            {"port": 80, "protocol": "tcp", "service": "http", "state": "open"}
-                        ]
+        step_results = [
+            {
+                "tool": "nmap_scan",
+                "result": {
+                    "hosts": {
+                        "example.com": {
+                            "status": "up",
+                            "ports": [
+                                {
+                                    "port": 22,
+                                    "protocol": "tcp",
+                                    "service": "ssh",
+                                    "state": "open",
+                                },
+                                {
+                                    "port": 80,
+                                    "protocol": "tcp",
+                                    "service": "http",
+                                    "state": "open",
+                                },
+                            ],
+                        }
                     }
-                }
+                },
             }
-        }]
-        
+        ]
+
         findings = supervisor._extract_findings_from_results(step_results)
-        
+
         assert len(findings) == 2
         assert all(f["type"] == "open_port" for f in findings)
         assert findings[0]["port"] == 22
         assert findings[1]["port"] == 80
-    
+
     def test_extract_findings_web_vulnerabilities(self):
         """Test extraction of web vulnerabilities as findings."""
         supervisor = SupervisorAgent()
-        
-        step_results = [{
-            "tool": "nikto_scan",
-            "result": {
-                "vulnerabilities": [
-                    {"id": "OSVDB-3092", "msg": "Server header found", "severity": "info"},
-                    {"id": "CVE-2021-1234", "msg": "SQL injection", "severity": "high"}
-                ]
+
+        step_results = [
+            {
+                "tool": "nikto_scan",
+                "result": {
+                    "vulnerabilities": [
+                        {"id": "OSVDB-3092", "msg": "Server header found", "severity": "info"},
+                        {"id": "CVE-2021-1234", "msg": "SQL injection", "severity": "high"},
+                    ]
+                },
             }
-        }]
-        
+        ]
+
         findings = supervisor._extract_findings_from_results(step_results)
-        
+
         assert len(findings) == 2
         assert all(f["type"] == "web_vulnerability" for f in findings)
         assert findings[0]["reference"] == "OSVDB-3092"
         assert findings[1]["severity"] == "high"
-    
+
     def test_extract_findings_discovered_paths(self):
         """Test extraction of discovered paths as findings."""
         supervisor = SupervisorAgent()
-        
-        step_results = [{
-            "tool": "gobuster_directory",
-            "result": {
-                "discovered_paths": [
-                    {"path": "/admin", "status_code": 200, "size": 1234},
-                    {"path": "/backup", "status_code": 403, "size": 278}
-                ]
+
+        step_results = [
+            {
+                "tool": "gobuster_directory",
+                "result": {
+                    "discovered_paths": [
+                        {"path": "/admin", "status_code": 200, "size": 1234},
+                        {"path": "/backup", "status_code": 403, "size": 278},
+                    ]
+                },
             }
-        }]
-        
+        ]
+
         findings = supervisor._extract_findings_from_results(step_results)
-        
+
         assert len(findings) == 1  # Only 200 status codes are considered interesting
         assert findings[0]["type"] == "interesting_path"
         assert findings[0]["path"] == "/admin"
-    
+
     def test_extract_findings_empty_results(self):
         """Test findings extraction with empty results."""
         supervisor = SupervisorAgent()
-        
+
         findings = supervisor._extract_findings_from_results([])
-        
+
         assert findings == []
 
 

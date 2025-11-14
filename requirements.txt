@@ -1,45 +1,49 @@
-fastmcp
-langchain
-langchain-community
-langgraph
-langchain-ollama
+# Kali Agents MCP - Pinned Dependencies
+# Generated: 2025-01-13
+# Python: 3.9+
+#
+# This file contains exact version pins for reproducible builds.
+# For version ranges suitable for library usage, see pyproject.toml
 
-# Web framework
-fastapi
-uvicorn
+# Core MCP and LangChain
+fastmcp==2.8.0
+langchain==0.1.12
+langchain-community==0.0.27
+langgraph==0.0.42
+langchain-ollama==0.0.2
 
-# Configuration management
-python-dotenv
+# Web Framework
+fastapi==0.115.12
+uvicorn[standard]==0.34.3
+
+# Configuration Management
+python-dotenv==1.0.1
 
 # Logging
-loguru
+loguru==0.7.2
 
-# CLI interface
-click
-rich
+# CLI Interface
+click==8.1.7
+rich==13.7.1
 
-# Report generation
-reportlab
-jinja2
+# Report Generation
+reportlab==4.0.9
+jinja2==3.1.3
 
-# Network and security tools integration
-python-nmap
-requests
-beautifulsoup4
+# Network and Security Tools Integration
+python-nmap==0.7.1
+requests==2.31.0
+beautifulsoup4==4.12.3
+shodan==1.31.0
 
-# Data processing
-pandas
-numpy
+# Data Processing
+pandas==2.2.1
+numpy==1.26.4
 
-# Async support
-aiohttp
-asyncio-mqtt
+# Async Support
+aiohttp==3.9.3
+asyncio-mqtt==0.16.2
 
-# Testing
-pytest
-pytest-asyncio
-
-# Development tools
-black
-flake8
-mypy
+# Testing (Core)
+pytest==8.4.0
+pytest-asyncio==0.24.0

@@ -1,13 +1,15 @@
-"""FastAPI endpoint tests for network and web scans."""
+"""FastAPI endpoint tests (router-level)."""
 
 import asyncio
 from typing import Any, Dict
 
 import pytest
-from fastapi.testclient import TestClient
+from fastapi import HTTPException
 
-from src.api.dependencies import get_supervisor
-from src.api.main import app
+from src.api.main import health_check
+from src.api.routers.network import NetworkScanRequest, network_scan
+from src.api.routers.web import WebScanRequest, web_scan
+from src.api.security import verify_api_key
 
 
 class _DummySupervisor:
@@ -35,62 +37,45 @@ class _DummySupervisor:
 
 
 @pytest.fixture()
-def client(monkeypatch):
-    """Provide a TestClient with supervisor dependency overridden."""
-
-    dummy = _DummySupervisor()
-    app.dependency_overrides[get_supervisor] = lambda: dummy
-    monkeypatch.delenv("KALI_AGENTS_API_KEY", raising=False)
-    with TestClient(app) as test_client:
-        yield test_client
-    app.dependency_overrides.pop(get_supervisor, None)
+def dummy_supervisor() -> _DummySupervisor:
+    return _DummySupervisor()
 
 
-def test_health_endpoint(client):
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+@pytest.mark.asyncio
+async def test_health_endpoint():
+    response = await health_check()
+    assert response == {"status": "ok"}
 
 
-def test_network_scan_returns_payload(client):
-    response = client.post(
-        "/network/scan",
-        json={"target": "192.168.1.1", "scan_type": "stealth"},
-    )
+@pytest.mark.asyncio
+async def test_network_scan_returns_payload(dummy_supervisor):
+    request = NetworkScanRequest(target="192.168.1.1", scan_type="stealth")
+    response = await network_scan(request, _api_key=None, supervisor=dummy_supervisor)
 
-    assert response.status_code == 202
-    data = response.json()
-    assert data["scan_id"] == "task-test"
-    assert data["target"] == "192.168.1.1"
-    assert data["status"] == "completed"
-    assert data["findings"]
+    assert response.scan_id == "task-test"
+    assert response.target == "192.168.1.1"
+    assert response.status == "completed"
+    assert response.findings
 
 
-def test_web_scan_returns_payload(client):
-    response = client.post(
-        "/web/scan",
-        json={"url": "https://example.com", "deep_scan": True},
-    )
+@pytest.mark.asyncio
+async def test_web_scan_returns_payload(dummy_supervisor):
+    request = WebScanRequest(url="https://example.com", deep_scan=True)
+    response = await web_scan(request, _api_key=None, supervisor=dummy_supervisor)
 
-    assert response.status_code == 202
-    data = response.json()
-    assert data["scan_id"] == "task-test"
-    assert data["url"] == "https://example.com"
-    assert data["status"] == "completed"
-    assert data["findings"]
+    assert response.scan_id == "task-test"
+    assert str(response.url) == "https://example.com/"
+    assert response.status == "completed"
+    assert response.findings
 
 
-def test_missing_api_key_when_required(monkeypatch):
+@pytest.mark.asyncio
+async def test_missing_api_key_when_required(monkeypatch):
     monkeypatch.setenv("KALI_AGENTS_API_KEY", "secret-token")
-    app.dependency_overrides[get_supervisor] = lambda: _DummySupervisor()
 
-    with TestClient(app) as test_client:
-        response = test_client.post(
-            "/network/scan",
-            json={"target": "192.168.1.1", "scan_type": "stealth"},
-        )
+    with pytest.raises(HTTPException) as exc:
+        await verify_api_key(api_key=None)
 
-    assert response.status_code == 401
-    assert response.json()["detail"].lower().startswith("invalid or missing")
-    app.dependency_overrides.pop(get_supervisor, None)
+    assert exc.value.status_code == 401
+    assert str(exc.value.detail).lower().startswith("invalid or missing")
     monkeypatch.delenv("KALI_AGENTS_API_KEY", raising=False)

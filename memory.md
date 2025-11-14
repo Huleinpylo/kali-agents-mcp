@@ -9,6 +9,7 @@ This file captures the latest engineering context so humans and AI assistants ca
 - Established this `memory.md` log so future sessions have an authoritative context anchor.
 - Added CHANGELOG tracking, security issue template, `.editorconfig`, Ruff config, and FastAPI scaffolding for network/web scans (see `src/api`).
 - Landed FastAPI endpoint tests in `tests/test_api_endpoints.py` to validate health, network/web scans, and API-key enforcement.
+- **2025-01-15** – Vulnerability MCP server (`src/mcp_servers/vulnerability_server.py`) delivered with sqlmap/nuclei/searchsploit/metasploit search tools, four hardened output parsers, strict validation, and 62 pytest cases (96% coverage). Full API docs live in `docs/vulnerability-server-api.md`, configs updated via `src/config/settings.py`.
 
 ## Current Test Failures
 - None recorded. Run `./test.sh` (full suite) before merging and document any failures or flakes here with reproduction steps.
@@ -19,6 +20,7 @@ This file captures the latest engineering context so humans and AI assistants ca
 ## Recent Changes & Impact
 - **2025-11-13** – Repository guidelines added; no runtime impact but docs now guide AI assistants toward correct workflows.
 - **2025-11-13** – API groundwork shipped (`src/api/main.py`, routers, security helpers); README documents how to run `uvicorn` for web/network scans.
+- **2025-01-15** – Vulnerability Agent MCP server + docs/tests landed; unblocks Forensic/Social/Report work and raises coverage.
 
 ## Action Plan & Priorities
 1. Keep automation runners (e.g., demos, supervisor) referencing `AGENTS.md`/`CONTEXT.MD` so AI copilots ingest the latest expectations.

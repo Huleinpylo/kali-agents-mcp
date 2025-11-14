@@ -102,7 +102,8 @@ class FuzzyLogicEngine(AdaptationAlgorithm):
         """Evaluate fuzzy logic performance."""
         if not results:
             return 0.5
-        return sum(r.get("assignment_score", 0.5) for r in results) / len(results)
+        average_score = sum(r.get("assignment_score", 0.5) for r in results) / len(results)
+        return round(average_score, 3)
 
 
 @dataclass
@@ -175,6 +176,10 @@ class GeneticAlgorithm(AdaptationAlgorithm):
             new_population.append(child)
         
         self.population = new_population
+        # Evaluate all individuals so downstream logic never sees zeroed fitness.
+        for individual in self.population:
+            individual.fitness = self.fitness_function(individual, context)
+        self.population.sort(key=lambda x: x.fitness, reverse=True)
         self.generation += 1
     
     def adapt(self, context: LearningContext, performance: PerformanceMetrics) -> Dict[str, Any]:
@@ -249,19 +254,22 @@ class QLearningAgent(AdaptationAlgorithm):
     def adapt(self, context: LearningContext, performance: PerformanceMetrics) -> Dict[str, Any]:
         """Apply Q-learning adaptation."""
         reward = performance.success_rate - 0.5  # Convert to reward signal
-        self.reward_history.append(reward)
+        recent_history = self.reward_history[-10:]
+        average_reward = float(np.mean(recent_history)) if recent_history else 0.0
         
         # Adjust exploration based on performance
         if performance.success_rate < 0.6:
             self.epsilon = min(0.3, self.epsilon * 1.1)
         else:
             self.epsilon = max(0.01, self.epsilon * 0.9)
+
+        self.reward_history.append(reward)
         
         return {
             "algorithm": "q_learning",
             "q_table_size": len(self.q_table),
             "epsilon": self.epsilon,
-            "average_reward": np.mean(self.reward_history[-10:]) if self.reward_history else 0.0
+            "average_reward": average_reward
         }
     
     def evaluate_performance(self, results: List[Dict[str, Any]]) -> float:

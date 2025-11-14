@@ -1,5 +1,7 @@
 """FastAPI application entrypoint."""
 
+import os
+from datetime import datetime
 from functools import lru_cache
 
 from fastapi import FastAPI
@@ -50,8 +52,39 @@ def _secure_openapi_schema():
 
 @app.get("/health", tags=["health"])
 async def health_check():
-    """Basic readiness probe."""
-    return {"status": "ok"}
+    """
+    Health check endpoint for monitoring and load balancers.
+
+    Returns:
+        dict: Health status with version, uptime, and service checks
+    """
+    return {
+        "status": "healthy",
+        "version": "0.1.0",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "service": "kali-agents-mcp",
+        "checks": {
+            "api": "healthy",
+            "database": "not_configured"  # Will be updated when DB is added
+        }
+    }
+
+
+@app.get("/version", tags=["health"])
+async def version_info():
+    """
+    Get version and build information.
+
+    Returns:
+        dict: Version details including git commit if available
+    """
+    return {
+        "version": "0.1.0",
+        "api_version": "v1",
+        "build_date": "2025-01-13",
+        "git_commit": os.getenv("GIT_COMMIT", "unknown"),
+        "python_version": os.getenv("PYTHON_VERSION", "3.10+")
+    }
 
 
 @app.get("/", tags=["meta"])

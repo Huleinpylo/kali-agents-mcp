@@ -36,6 +36,7 @@
 #### ? **Infrastructure MCP**
 - Network Agent MCP Server complet
 - Web Agent MCP Server (90% - parsing ? finaliser)
+- Vulnerability Agent MCP Server ✅ (sqlmap, nuclei, searchsploit, metasploit search, 62 tests, 96% couverture)
 - Configuration et int?gration MCP
 
 #### ? **Outils de D?veloppement**
@@ -46,7 +47,7 @@
 ### ? **En Cours de Finalisation (5%)**
 - Web Agent parsing functions
 - Tests unitaires complets
-- Agents suppl?mentaires (Vulnerability, Forensic, Social, Report)
+- Agents suppl?mentaires (Forensic, Social, Report)
 
 ## ?? Protections de S?curit? Impl?ment?es
 
@@ -107,12 +108,13 @@
 - **Architecture** : 95% compl?te
 - **S?curit?** : Niveau Entreprise
 - **Innovation** : R?volutionnaire (premi?re mondiale)
-- **Documentation** : Exhaustive (7 documents d?taill?s)
-- **Tests** : Multi-environnements (Python 3.9-3.12, Kali native)
+- **Documentation** : Exhaustive (7 documents d?taill?s + `docs/vulnerability-server-api.md`)
+- **Tests** : Multi-environnements + 62 cas ciblant le Vulnerability server (96% couverture)
 
 ### ? **Statistiques Repository**
 - **25+ fichiers** de code et configuration
 - **22 commits** structur?s et document?s
+- **1 nouveau MCP server** (Vulnerability) avec 548 lignes de code et 4 parsers
 - **GPL-3.0** - License appropri?e pour cybers?curit?
 - **Zero vuln?rabilit?s** d?tect?es
 - **100% compliance** ?thique et l?gale
@@ -159,7 +161,7 @@
 - ? Premier release stable
 
 ### ? **Phase 2 : Expansion Agents (1 mois)**
-- ? Vulnerability Agent complet
+- ✅ Vulnerability Agent complet (sqlmap/nuclei/searchsploit/metasploit search + 62 tests)
 - ? Forensic Agent impl?mentation
 - ? Social Agent OSINT
 - ? Report Agent PDF generation
