@@ -29,7 +29,7 @@ jobs:
         egress-policy: audit
 
     - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6.pre.beta
 
     - name: Set up Python
       uses: actions/setup-python@5fa0ee6f38acba344a11175befcf11c0c1d46f5a # v4.9.1
@@ -106,7 +106,7 @@ jobs:
         egress-policy: audit
 
     - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6.pre.beta
       
     - name: Dependency Review
       uses: actions/dependency-review-action@da24556b548a50705dd671f47852072ea4c105d9 # v4.7.1
@@ -134,7 +134,7 @@ jobs:
         egress-policy: audit
 
     - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6.pre.beta
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@ae78991f558bb4195cb8a727cb6679c362b9cf24 # v2.28.1
@@ -161,7 +161,7 @@ jobs:
         egress-policy: audit
 
     - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6.pre.beta
       with:
         fetch-depth: 0
 
@@ -184,7 +184,7 @@ jobs:
         egress-policy: audit
 
     - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6.pre.beta
 
     - name: Set up Python
       uses: actions/setup-python@5fa0ee6f38acba344a11175befcf11c0c1d46f5a # v4.9.1
@@ -226,7 +226,7 @@ jobs:
         egress-policy: audit
 
     - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      uses: actions/checkout@71cf2267d89c5cb81562390fa70a37fa40b1305e # v6.pre.beta
       with:
         persist-credentials: false
 
