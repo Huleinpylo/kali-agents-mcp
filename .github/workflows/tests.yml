@@ -100,7 +100,7 @@ jobs:
         fail_ci_if_error: false
 
     - name: Upload test artifacts
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: always()
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
@@ -161,7 +161,7 @@ jobs:
         TEST_ENVIRONMENT: ci
 
     - name: Upload integration test results
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: always()
       with:
         name: integration-test-results
@@ -197,7 +197,7 @@ jobs:
         pytest tests/security/ -v --tb=short
 
     - name: Upload security test results
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       if: always()
       with:
         name: security-test-results
@@ -234,7 +234,7 @@ jobs:
         pytest tests/performance/ -v --benchmark-only --benchmark-json=benchmark.json
 
     - name: Upload performance results
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
       # Always upload performance results even if tests fail
       if: always()
       with:

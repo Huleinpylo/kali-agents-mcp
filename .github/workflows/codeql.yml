@@ -79,7 +79,7 @@ jobs:
         
     # Upload the results as artifacts for reference
     - name: Upload CodeQL results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: codeql-results
