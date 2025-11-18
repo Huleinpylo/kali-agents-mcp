@@ -209,7 +209,7 @@ security = [
 docs = [
     "sphinx>=7.2.0,<8.0.0",
     "sphinx-rtd-theme>=2.0.0,<3.0.0",
-    "sphinx-autodoc-typehints>=1.25.0,<2.0.0",
+    "sphinx-autodoc-typehints>=1.25.0,<4.0.0",
 ]
 
 
